@@ -6,7 +6,8 @@ const morgan = require("morgan");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const socket = require("socket.io");
-const {exec}= require("child-process");
+// const {exec}= require("child-process");
+const check = require("./middleware/check-auth");
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.use(bp.urlencoded({
 }));
 app.use(bp.json());
 app.use(cors());
+// app.use(check);
 
 // ------------routes[handle incoming req]-----------
 
@@ -44,7 +46,17 @@ var io = socket(server);
 io.on('connection', (person) =>{
     
     console.log(`made socket connection : ${person.id}`); 
-    exec("touch file.groff", (err,stdout,stderr)=>{
+    // exec("touch file.groff", (err,stdout,stderr)=>{
+    //     if(err){
+    //         console.log(`Error: ${err.message}`);
+    //     }
+    //     if(stderr){
+    //         console.log(`Error: ${stderr}`);
+    //     }
+    //     console.log(stdout)
+    // });
+
+    exec("groff -i ms -T html >> out.html", (err,stdout,stderr)=>{
         if(err){
             console.log(`Error: ${err.message}`);
         }
@@ -53,7 +65,6 @@ io.on('connection', (person) =>{
         }
         console.log(stdout)
     });
-
     person.on("cmd", function(data){
         exec(data, (err,stdout,stderr)=>{
             if(err){
@@ -64,6 +75,9 @@ io.on('connection', (person) =>{
             }
             console.log(stdout)
         });
+
+        
+
     });
 });
 

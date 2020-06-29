@@ -12,4 +12,3 @@ btn.addEventListener("click", function(){
     socket.emit("cmd", command.value);
 });
 
-

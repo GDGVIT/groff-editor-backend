@@ -46,15 +46,6 @@ var io = socket(server);
 io.on('connection', (person) =>{
     
     console.log(`made socket connection : ${person.id}`); 
-    // exec("touch file.groff", (err,stdout,stderr)=>{
-    //     if(err){
-    //         console.log(`Error: ${err.message}`);
-    //     }
-    //     if(stderr){
-    //         console.log(`Error: ${stderr}`);
-    //     }
-    //     console.log(stdout)
-    // });
 
     exec("groff -i ms -T html >> out.html", (err,stdout,stderr)=>{
         if(err){
@@ -75,7 +66,7 @@ io.on('connection', (person) =>{
             }
             console.log(stdout)
         });
-
+        
         
 
     });

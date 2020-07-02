@@ -15,7 +15,7 @@ router.post("/signup", (req, res) => {
                 message: "mail exists"
             });
         } else {
-            bcrypt.hash(req.body.password, 10, (err, hash) => {
+            bcrypt.hash(req.body.password, parseInt(process.env.NUM_HASH), (err, hash) => {
                 if (err) {
                     return res.status(500).json({
                         error: err

@@ -1,0 +1,35 @@
+{
+  "name": "groff-editor-backend",
+  "version": "1.0.0",
+  "description": "<p align=\"center\">\r <a href=\"https://dscvit.com\">\r \t<img src=\"https://user-images.githubusercontent.com/30529572/72455010-fb38d400-37e7-11ea-9c1e-8cdeb5f5906e.png\" />\r </a>\r \t<h2 align=\"center\"> Online Groff editor </h2>\r \t<h4 align=\"center\"> Groff (GNU troff) is a typesetting system that reads plain text mixed with formatting commands and produces formatted output. However, there doesnt exist an online editor for the same. This project aims to make an online editor for Groff <h4>\r </p>",
+  "main": "app.js",
+  "dependencies": {
+    "bcrypt": "^5.0.0",
+    "body-parser": "^1.19.0",
+    "child-process": "^1.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "googleapis": "^52.1.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.9.18",
+    "morgan": "^1.10.0",
+    "socket.io": "^2.3.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pragati1610/groff-editor-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Pragati1610/groff-editor-backend/issues"
+  },
+  "homepage": "https://github.com/Pragati1610/groff-editor-backend#readme"
+}

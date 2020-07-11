@@ -12,3 +12,7 @@ btn.addEventListener("click", function(){
     socket.emit("cmd", command.value);
 });
 
+socket.on('cmd', function(text){
+    output.innerHTML += `<p style="color: white;">${text}</p>`;
+    console.log(text);
+});

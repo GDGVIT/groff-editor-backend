@@ -56,6 +56,7 @@ io.on('connection', (person) => {
                 console.log(`Error: ${stderr}`);
             }
             console.log(stdout)
+            let p = "this is o/p";
             person.emit('cmd', stdout);
         });
 

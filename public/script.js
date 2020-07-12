@@ -13,6 +13,6 @@ btn.addEventListener("click", function(){
 });
 
 socket.on('cmd', function(text){
-    output.innerHTML += `<p style="color: white;">${text}</p>`;
+    output.innerHTML += `<pre style="color: white;">${text}</pre>`;
     console.log(text);
 });

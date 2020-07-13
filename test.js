@@ -29,14 +29,25 @@
 
 const { spawn, exec } = require('child_process');
 
-const child = exec('echo ".B bold" | groff -i -ms -T html');
+// const child = exec('echo ".B bold" | groff -i -ms -T html');
 
-// child.stdin.write(".B bold")
+// // child.stdin.write(".B bold")
 
-child.stdout.on('data', (data) => {
-  console.log(`child stdout:\n${data}`);
+// child.stdout.on('data', (data) => {
+//   console.log(`child stdout:\n${data}`);
+// });
+
+let child = exec(`echo "hey there"`, (err, stdout, stderr) => {
+  if (err) {
+      console.log(`Error: ${err.message}`);
+  }
+  if (stderr) {
+      console.log(`Error: ${stderr}`);
+  }
+  console.log(stdout)
+  // let p = "this is o/p";
+  // person.emit('cmd', stdout);
 });
-
 // var cmd = require('node-cmd');
 
 // // cmd.run('echo ".B bold" | groff -i -ms -T html');

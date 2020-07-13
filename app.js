@@ -48,7 +48,7 @@ io.on('connection', (person) => {
 
         let command = 'echo "' + val + '"';
 
-        child = exec(`${command} | groff -i -ms -T html`, (err, stdout, stderr) => {
+        child = exec(`echo "hey there" && ${command} | groff -i -ms -T html`, (err, stdout, stderr) => {
             if (err) {
                 console.log(`Error: ${err.message}`);
             }

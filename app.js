@@ -13,15 +13,15 @@ const {
 
 dotenv.config();
 
-mongoose.set('useCreateIndex', true);
-mongoose.connect(
-    'mongodb+srv://groff:' +
-    process.env.MONGO_PASS +
-    '@cluster0-jtj9m.mongodb.net/pragati?retryWrites=true&w=majority', {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    },
-);
+//mongoose.set('useCreateIndex', true);
+//mongoose.connect(
+//    'mongodb+srv://groff:' +
+//    process.env.MONGO_PASS +
+//    '@cluster0-jtj9m.mongodb.net/pragati?retryWrites=true&w=majority', {
+//        useNewUrlParser: true,
+//        useUnifiedTopology: true
+//    },
+//);
 
 const server = app.listen("3000", function () {
     console.log("Server started");

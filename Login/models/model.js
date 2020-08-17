@@ -12,7 +12,8 @@ const userSchema = mongoose.Schema({
         type: String,
         min: 6,
         max: 30
-    }
+    },
+    
 });
 
 module.exports = mongoose.model('User', userSchema);

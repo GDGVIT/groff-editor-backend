@@ -1,4 +1,4 @@
-var socket = io.connect('http://localhost:3000');
+var socket = io.connect('https://groff-backend.herokuapp.com/');
 
 // Query DOM
 

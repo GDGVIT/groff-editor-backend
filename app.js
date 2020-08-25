@@ -6,7 +6,7 @@ const morgan = require("morgan");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const socket = require("socket.io");
-const port = 3000||process.env.PORT;
+const port = process.env.PORT||3000;
 const {
     exec
 } = require("child_process");
@@ -90,4 +90,3 @@ io.on('connection', (person) => {
         });
     });
 }); 
-

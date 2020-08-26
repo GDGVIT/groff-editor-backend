@@ -10,9 +10,13 @@ const port = process.env.PORT||3000;
 const {
     exec
 } = require("child_process");
+const { check, validationResult } = require("express-validator");
+
+var data = '';
 const loginRoute = require("./Login/routes/login");
 const oAuthRoute = require("./Login/routes/oAuth");
 const searchRoute = require("./Login/routes/search");
+const Search = require("./Login/models/search");
 
 dotenv.config();
 
@@ -25,22 +29,6 @@ app.use(bp.urlencoded({
 }));
 app.use(bp.json());
 app.use(cors());
-
-
-// var fs = require('fs');
-// var Grid = require('gridfs-stream');
-// var GridFS = Grid(mongoose.connection.db, mongoose.mongo);
-
-// function putFile(path, name, callback) {
-//     var writestream = GridFS.createWriteStream({
-//         filename: name
-//     });
-//     writestream.on('close', function (file) {
-//       callback(null, file);
-//     });
-//     fs.createReadStream(path).pipe(writestream);
-// }
-
 
 // mongo db
 
@@ -75,6 +63,28 @@ io.on('connection', (person) => {
     console.log(`made socket connection : ${person.id}`);
 
     person.on("cmd", function (val) {
+        
+        let val_json = JSON.parse(val);
+        
+        let token = val_json.token;
+        let user_id = val_json.userid;
+        let fileNum = val_json.fileNum;
+        let fileName = val_json.fileName;
+        let data = val_json.data;
+        let email;
+        try {
+            email = jwt.verify(token, process.env.JWT_KEY);
+        } catch (err) {
+            console.log(err);
+            return res.status(403).json({
+                message: err
+            });
+        }
+        Search.update({
+
+        });
+
+        // Search.findById(user_id).
 
         let command = 'printf "' + val + '"';
 
@@ -88,5 +98,8 @@ io.on('connection', (person) => {
             console.log(stdout)
             person.emit('cmd', stdout);
         });
+
+
+
     });
 }); 

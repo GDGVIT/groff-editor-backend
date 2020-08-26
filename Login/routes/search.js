@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { check, validationResult } = require("express-validator");
 
 const mongoose = require("mongoose");
 const Search = require("../models/search.js");

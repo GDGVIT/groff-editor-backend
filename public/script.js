@@ -1,4 +1,4 @@
-var socket = io.connect('http://localhost:3000');
+var socket = io.connect('https://groff-backend.herokuapp.com/');
 
 // Query DOM
 
@@ -12,3 +12,7 @@ btn.addEventListener("click", function(){
     socket.emit("cmd", command.value);
 });
 
+socket.on('cmd', function(text){
+    output.innerHTML += `<pre style="color: white;">${text}</pre>`;
+    console.log(text);
+});

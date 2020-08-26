@@ -1,12 +1,14 @@
-const express = require("express");
-const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const express = require("express");
+const router = express.Router();
 
 const mongoose = require("mongoose");
 const User = require("../models/model.js");
 
 router.post("/signup", (req, res) => {
+    let mail = req.body.email;
+    console.log(mail);
     User.find({
         email: req.body.email
     }).exec().then(useri => {
@@ -28,7 +30,8 @@ router.post("/signup", (req, res) => {
                     });
                     user.save().then(result => {
                         res.status(201).json({
-                            message: "User created"
+                            message: "User created",
+                            userid: user._id
                         });
                     });
                 }
@@ -40,7 +43,6 @@ router.post("/signup", (req, res) => {
             error: err
         });
     });
-
 });
 
 
@@ -69,7 +71,8 @@ router.post("/login", (req, res) => {
                 });
                 return res.status(200).json({
                     message: "Auth successful",
-                    token: token
+                    token: token,
+                    userid: user._id
                 });
             }
             res.status(401).json({
@@ -84,12 +87,13 @@ router.post("/login", (req, res) => {
     });
 });
 
-router.delete("/:userId", (req, res) => {
+router.delete("/delete/:userId", (req, res) => {
     User.remove({
         _id: req.params.userId
     }).exec().then(result => {
         res.status(200).json({
-            message: "User deleted"
+            message: "User deleted",
+            userid: user._id
         });
     }).catch(err => {
         console.log(err);

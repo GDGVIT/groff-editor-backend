@@ -1,64 +1,27 @@
 const express = require("express");
 const app = express();
-const router = express.Router();
 const bp = require("body-parser");
 const cors = require("cors");
 const morgan = require("morgan");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const socket = require("socket.io");
+const port = process.env.PORT||3000;
 const {
     exec
 } = require("child_process");
-const {
-    spawn
-} = require("child_process");
-const check = require("./middleware/check-auth");
-const fetch = require('node-fetch');
+const { check, validationResult } = require("express-validator");
+
+var data = '';
+const loginRoute = require("./Login/routes/login");
+const oAuthRoute = require("./Login/routes/oAuth");
+const searchRoute = require("./Login/routes/search");
+const Search = require("./Login/models/search");
 
 dotenv.config();
 
-// const orderRoute = require("./order/routes/routes");
-// const userRoute = require("./Login/routes/login");
+// middle-wares
 
-// const { google } = require('googleapis');
-
-// const oauth2Client = new google.auth.OAuth2(
-//     process.env.YOUR_CLIENT_ID,
-//     process.env.YOUR_CLIENT_SECRET,
-//     process.env.YOUR_REDIRECT_URL
-// );
-
-// // generate a url that asks permissions for email and 
-// const scopes = [
-//     'https://www.googleapis.com/auth/userinfo.email',
-//     'https://www.googleapis.com/auth/userinfo.profile',
-//     'openid'
-// ];
-
-// const url = oauth2Client.generateAuthUrl({
-//     scope: scopes
-// });
-
-
-
-const server = app.listen("3000", function () {
-    console.log("Server started");
-});
-
-
-mongoose.set('useCreateIndex', true);
-mongoose.connect(
-    'mongodb+srv://groff:' +
-    process.env.MONGO_PASS +
-    '@cluster0-jtj9m.mongodb.net/pragati?retryWrites=true&w=majority', {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    },
-
-);
-
-// -----------middle-wares-----------
 app.use(morgan("dev"));
 app.use(express.static('public'));
 app.use(bp.urlencoded({
@@ -66,9 +29,32 @@ app.use(bp.urlencoded({
 }));
 app.use(bp.json());
 app.use(cors());
-// app.use(check);
 
-// ------------routes[handle incoming req]-----------
+// mongo db
+
+mongoose.set('useCreateIndex', true);
+mongoose.connect(
+   'mongodb+srv://groff:' +
+   process.env.MONGO_PASS +
+   '@cluster0-jtj9m.mongodb.net/pragati?retryWrites=true&w=majority', {
+       useNewUrlParser: true,
+       useUnifiedTopology: true
+   },
+);
+
+// listen port
+
+const server = app.listen(port, function () {
+    console.log("Server started");
+});
+
+// routes
+
+app.use('/auth', oAuthRoute);
+app.use('/manauth', loginRoute);
+app.use('/search', searchRoute);
+
+// web socket[handle incoming req]
 
 let child;
 var io = socket(server);
@@ -76,22 +62,44 @@ io.on('connection', (person) => {
 
     console.log(`made socket connection : ${person.id}`);
 
-    exec("groff -i ms -T html >> out.html", (err, stdout, stderr) => {
-        if (err) {
-            console.log(`Error: ${err.message}`);
-        }
-        if (stderr) {
-            console.log(`Error: ${stderr}`);
-        }
-        console.log(stdout)
-    });
-
     person.on("cmd", function (val) {
-        child = spawn(val);
-        child.stdout.on("data", (data)=>{
-            console.log(data);
-        });
-    });
-});
+        
+        let val_json = JSON.parse(val);
+        
+        let token = val_json.token;
+        let user_id = val_json.userid;
+        let fileNum = val_json.fileNum;
+        let fileName = val_json.fileName;
+        let data = val_json.data;
+        let email;
+        try {
+            email = jwt.verify(token, process.env.JWT_KEY);
+        } catch (err) {
+            console.log(err);
+            return res.status(403).json({
+                message: err
+            });
+        }
+        Search.update({
 
-// app.use("/user", userRoute);
+        });
+
+        // Search.findById(user_id).
+
+        let command = 'printf "' + val + '"';
+
+        child = exec(`${command} | groff -i -ms -T html`, (err, stdout, stderr) => {
+            if (err) {
+                console.log(`Error: ${err.message}`);
+            }
+            if (stderr) {
+                console.log(`Error: ${stderr}`);
+            }
+            console.log(stdout)
+            person.emit('cmd', stdout);
+        });
+
+
+
+    });
+}); 

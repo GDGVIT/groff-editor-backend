@@ -1,5 +1,10 @@
 const mongoose = require("mongoose");
 
+const fileSchema = mongoose.Schema({
+    fileName: {type: String, required: true, default: "my first project" },
+    fileData: {type: String, default: ""}
+});
+
 const userSchema = mongoose.Schema({
     _id: mongoose.Schema.Types.ObjectId,
     email: {
@@ -13,7 +18,8 @@ const userSchema = mongoose.Schema({
         min: 6,
         max: 30
     },
-    
+    files: [fileSchema]
 });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports.User = mongoose.model('User', userSchema);
+module.exports.File = mongoose.model('File', fileSchema);

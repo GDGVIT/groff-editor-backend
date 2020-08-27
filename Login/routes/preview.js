@@ -1,9 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const { check, validationResult } = require("express-validator");
-
+const {
+    check,
+    validationResult
+} = require("express-validator");
+const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
-const Search = require("../models/search.js");
+const {
+    User
+} = require("../models/model.js");
 
 router.get('/:userId', [check("Authorization")], (req, res) => {
 
@@ -13,18 +18,15 @@ router.get('/:userId', [check("Authorization")], (req, res) => {
             error: error.array()
         });
     }
-    let  userId = req.params.userId;
-    Search.findById({
-        userId: userId
-    }).select("fileName file")
+    let userId = req.params.userId;
+    User.find(userId).select("files")
         .exec()
         .then(docs => {
             const response = {
                 count: docs.length,
                 searches: docs.map(doc => {
                     return {
-                        fileName: doc.fileName,
-                        file: doc.file
+                        files: doc.files
                     }
                 })
             };
@@ -36,7 +38,7 @@ router.get('/:userId', [check("Authorization")], (req, res) => {
         });
 });
 
-router.post("/:userId/createFile",
+router.patch("/createFile/:userId",
     [
         check("fileName"),
         check("Authorization")
@@ -61,35 +63,61 @@ router.post("/:userId/createFile",
             });
         }
 
-        const search = new Search({
-            _id: new mongoose.Types.ObjectId(),
-            userId: ureq.params.userId,
-            fileName: req.body.fileName,
-            file: ""
-        });
-        search.save().then(result => {
-            console.log(result);
-            res.status(201).json({
+        let id = req.params.userId;
+
+        let fileName = req.body.fileName;
+        let fileData = "";
+        User.updateOne({
+            _id: id
+        }, {
+            $push: {
+                files: {
+                    fileName: fileName,
+                    fileData: fileData
+                }
+            }
+        }).exec().then(result => {
+            res.status(200).json({
                 message: "File created",
-                fileName: search.fileName
+                created: {
+                    fileName: fileName,
+                    fileData: fileData
+                }
             });
         }).catch(err => {
             console.log(err);
         });
+
     });
 
-router.get("/:userId&:searchId",
+router.get("/:userId&:fileName",
     [check("Authorization")],
     (req, res) => {
         const error = validationResult(req);
         if (!error.isEmpty()) {
             return res.status(422).json({
                 error: error.array()
-            }); 
+            });
         }
-        const id = req.params.searchId;
-        const userId = req.params.userId;
-        Search.findById(id).select("fileNum file")
+
+        const token = req.header("Authorization");
+        let email;
+        try {
+            email = jwt.verify(token, process.env.JWT_KEY);
+        } catch (err) {
+            console.log(err);
+            return res.status(403).json({
+                message: err
+            });
+        }
+
+        const id = req.params.userId;
+        Search.findById({
+                _id: id,
+                files: {
+                    fileName: req.params.fileName
+                }
+            }).select("fileData")
             .exec().then(doc => {
                 console.log(doc);
                 if (doc) {
@@ -98,7 +126,7 @@ router.get("/:userId&:searchId",
                     });
                 } else {
                     res.status(404).json({
-                        message: "No valid id"
+                        message: "No data saved for this file name"
                     });
                 }
 
@@ -110,26 +138,9 @@ router.get("/:userId&:searchId",
             });
     });
 
-router.delete("/:searchId", (req, res) => {
-    const id = req.params.searchId;
-    Search.remove({
-        _id: id
-    }).exec().then(result => {
-        res.status(200).json(result);
-    }).catch(err => {
-        console.log(err);
-        res.status(500).json({
-            error: err
-        });
-    });
-});
-
-module.exports = router;
-
-
-router.patch("/:searchId",
-    [check("Authorization")], (req, res) => {
-
+router.delete("/:userId&:fileName",
+    [check("Authorization")],
+    (req, res) => {
         const error = validationResult(req);
         if (!error.isEmpty()) {
             return res.status(422).json({
@@ -138,7 +149,6 @@ router.patch("/:searchId",
         }
 
         const token = req.header("Authorization");
-        let isValid = false;
         let email;
         try {
             email = jwt.verify(token, process.env.JWT_KEY);
@@ -148,25 +158,24 @@ router.patch("/:searchId",
                 message: err
             });
         }
-        const id = req.params.searchId;
-        const updateOps = {};
-        console.log(req.body);
-        for (const ops in req.body) {
-            updateOps[ops.propName] = ops.value;
-            console.log(updateOps[ops.propName]);
-        }
-        Search.update({
-                _id: id
-            }, {
-                $set: updateOps
-            })
-            .exec()
-            .then(result => {
-                res.status(200).json({
-                    message: "Patched successfully",
-                    updated: updateOps
-                });
-            }).catch(err => {
-                console.log(err);
+        const id = req.params.userId;
+        const fileName = req.body.fileName;
+        User.updateOne({
+            _id: id
+        }, {
+            $pull: {
+                files: {
+                    "files.fileName": fileName
+                }
+            }
+        }).exec().then(result => {
+            res.status(200).json(result);
+        }).catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err
             });
+        });
     });
+
+module.exports = router;

@@ -15,8 +15,8 @@ const { check, validationResult } = require("express-validator");
 var data = '';
 const loginRoute = require("./Login/routes/login");
 const oAuthRoute = require("./Login/routes/oAuth");
-const searchRoute = require("./Login/routes/search");
-const Search = require("./Login/models/search");
+const previewRoute = require("./Login/routes/preview");
+const {User} = require("./Login/models/model");
 
 dotenv.config();
 
@@ -52,7 +52,7 @@ const server = app.listen(port, function () {
 
 app.use('/auth', oAuthRoute);
 app.use('/manauth', loginRoute);
-app.use('/search', searchRoute);
+app.use('/preview', previewRoute);
 
 // web socket[handle incoming req]
 
@@ -68,7 +68,6 @@ io.on('connection', (person) => {
         
         let token = val_json.token;
         let user_id = val_json.userid;
-        let fileNum = val_json.fileNum;
         let fileName = val_json.fileName;
         let data = val_json.data;
         let email;
@@ -80,13 +79,21 @@ io.on('connection', (person) => {
                 message: err
             });
         }
-        Search.update({
-
+        User.update({
+             _id: user_id,
+             "files.fileName": fileName
+        }, {
+            $set: {"files.filedata": data}
+        }).exec().then(result => {
+            res.status(200).json({
+                message: "File updated",
+                data: data
+            });
+        }).catch(err => {
+            console.log(err);
         });
 
-        // Search.findById(user_id).
-
-        let command = 'printf "' + val + '"';
+        let command = 'printf "' + data + '"';
 
         child = exec(`${command} | groff -i -ms -T html`, (err, stdout, stderr) => {
             if (err) {
@@ -98,8 +105,5 @@ io.on('connection', (person) => {
             console.log(stdout)
             person.emit('cmd', stdout);
         });
-
-
-
     });
 }); 

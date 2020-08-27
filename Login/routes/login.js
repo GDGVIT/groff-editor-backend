@@ -4,7 +4,7 @@ const express = require("express");
 const router = express.Router();
 
 const mongoose = require("mongoose");
-const User = require("../models/model.js");
+const {User} = require("../models/model.js");
 
 router.post("/signup", (req, res) => {
     let mail = req.body.email;

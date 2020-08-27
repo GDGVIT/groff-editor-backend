@@ -62,6 +62,7 @@ app.use("/preview", previewRoute);
 
 let child;
 var io = socket(server);
+io.origins('*:*');
 io.on("connection", (person) => {
   console.log(`made socket connection : ${person.id}`);
 

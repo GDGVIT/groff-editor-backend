@@ -62,6 +62,7 @@ router.patch(
 
     let fileName = req.body.fileName;
     let fileData = "";
+
     User.updateOne(
       {
         _id: id,

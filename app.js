@@ -6,7 +6,7 @@ const morgan = require("morgan");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const socket = require("socket.io");
-const port = process.env.PORT || 3000;
+
 const jwt = require("jsonwebtoken");
 const { exec } = require("child_process");
 const { check, validationResult } = require("express-validator");
@@ -18,6 +18,8 @@ const previewRoute = require("./Login/routes/preview");
 const { User } = require("./Login/models/model");
 
 dotenv.config();
+
+const port = process.env.PORT || 3000;
 
 // middle-wares
 
@@ -47,7 +49,7 @@ mongoose.connect(
 // listen port
 
 const server = app.listen(port, function () {
-  console.log("Server started");
+  console.log(`Server started at ${port}`);
 });
 
 // routes

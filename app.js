@@ -7,10 +7,12 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const socket = require("socket.io");
 const port = process.env.PORT||3000;
+const fs = require("fs");
 const {
     exec
 } = require("child_process");
 const { check, validationResult } = require("express-validator");
+const https = require('https');
 
 var data = '';
 const loginRoute = require("./Login/routes/login");
@@ -44,10 +46,6 @@ mongoose.connect(
 
 // listen port
 
-const server = app.listen(port, function () {
-    console.log("Server started");
-});
-
 // routes
 
 app.use('/auth', oAuthRoute);
@@ -57,6 +55,13 @@ app.use('/search', searchRoute);
 // web socket[handle incoming req]
 
 let child;
+
+const privateKey  = fs.readFileSync('./certs/privkey.pem', 'utf8');
+const certificate = fs.readFileSync('./certs/cert.pem', 'utf8');
+const httpsServer = https.createServer({key: privateKey, cert: certificate}, app);
+const server = httpsServer.listen(process.env.SSL_PORT || 443);
+console.log("Listening on HTTPS");
+
 var io = socket(server);
 io.on('connection', (person) => {
 

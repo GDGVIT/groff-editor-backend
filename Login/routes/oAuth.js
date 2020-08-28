@@ -14,7 +14,7 @@ async function getAccessTokenFromCode(code) {
     data: {
       client_id: process.env.CLIENT_ID,
       client_secret: process.env.CLIENT_SECRET,
-      redirect_uri: "http://localhost:3000/auth/google",
+      redirect_uri: process.env.REDIRECT_URI,
       grant_type: "authorization_code",
       code,
     },

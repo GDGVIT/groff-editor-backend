@@ -37,9 +37,7 @@ app.use(cors());
 
 mongoose.set("useCreateIndex", true);
 mongoose.connect(
-  "mongodb+srv://groff:" +
-    process.env.MONGO_PASS +
-    "@cluster0-jtj9m.mongodb.net/pragati?retryWrites=true&w=majority",
+    process.env.MONGO_URL,
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,

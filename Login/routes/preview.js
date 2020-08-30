@@ -63,6 +63,19 @@ router.patch(
     let fileName = req.body.fileName;
     let fileData = "";
 
+    User.find({
+      _id: id, 
+      "files.fileName": fileName
+    }).exec().then((result)=>{
+      if(result>1){
+        return res.status(409).json({
+          message: "file with that name already exists"
+        });
+      }
+    }).catch((err)=>{
+      console.log(err);
+    });
+
     User.updateOne(
       {
         _id: id,

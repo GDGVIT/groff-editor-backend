@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const express = require("express");
 const router = express.Router();
@@ -19,31 +19,62 @@ router.post("/signup", (req, res) => {
           message: "mail exists",
         });
       } else {
-        bcrypt.hash(
-          req.body.password,
-          parseInt(process.env.NUM_HASH),
-          (err, hash) => {
-            if (err) {
-              return res.status(500).json({
-                error: err,
-              });
-            } else {
-              const user = new User({
-                _id: new mongoose.Types.ObjectId(),
-                email: req.body.email,
-                password: hash,
-              });
-              user.save().then((result) => {
-                res.status(201).json({
-                  message: "User created",
-                  userid: user._id,
-                });
-              });
-            }
-          }
-        );
-      }
-    })
+        // bcrypt.hash(
+        //   req.body.password,
+        //   parseInt(process.env.NUM_HASH),
+        //   (err, hash) => {
+        //     if (err) {
+        //       return res.status(500).json({
+        //         error: err,
+        //       });
+        //     } else {
+        //       const user = new User({
+        //         _id: new mongoose.Types.ObjectId(),
+        //         email: req.body.email,
+        //         password: hash,
+        //       });
+        //       user.save().then((result) => {
+        //         res.status(201).json({
+        //           message: "User created",
+        //           userid: user._id,
+        //         });
+        //       });
+        //     }
+        //   }
+        // );
+        bcrypt.genSalt(parseInt(process.env.NUM_HASH), function(err, salt) {
+          bcrypt.hash(req.body.password, salt, function(err, hash) {
+              if (err) {
+                    return res.status(500).json({
+                      error: err,
+                    });
+                  } else {
+                    const user = new User({
+                      _id: new mongoose.Types.ObjectId(),
+                      email: req.body.email,
+                      password: hash,
+                    });
+                    user.save().then((result) => {
+                      const token = jwt.sign({
+                            email: user.email,
+                            userId: user._id,
+                          },
+                          process.env.JWT_KEY,
+                          {
+                            expiresIn: "1h",
+                          }
+                        );
+                      res.status(201).json({
+                        message: "User created",
+                        userid: user._id,
+                        token: token,
+                      });
+                    });
+                 }
+          });
+      });
+    }
+  })
     .catch((err) => {
       console.log(err);
       res.status(500).json({
@@ -51,6 +82,11 @@ router.post("/signup", (req, res) => {
       });
     });
 });
+
+
+
+
+
 
 router.post("/login", (req, res) => {
   User.find({
@@ -83,7 +119,7 @@ router.post("/login", (req, res) => {
           return res.status(200).json({
             message: "Auth successful",
             token: token,
-            userid: user._id,
+            userid: user[0]._id,
           });
         }
         res.status(401).json({

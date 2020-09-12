@@ -1,8 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { check, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
+const { check, validationResult } = require("express-validator");
 const { User } = require("../models/model.js");
+
+// get all files for a user
 
 router.get("/:userId", [check("Authorization")], (req, res) => {
   const error = validationResult(req);
@@ -34,11 +36,12 @@ router.get("/:userId", [check("Authorization")], (req, res) => {
     });
 });
 
+// create a new file
+
 router.patch(
   "/createFile/:userId",
   [check("fileName"), check("Authorization")],
   (req, res) => {
-    console.log(req.body);
 
     const error = validationResult(req);
     if (!error.isEmpty()) {
@@ -67,16 +70,12 @@ router.patch(
       _id: id, 
       "files.fileName": fileName
     }).exec().then((result)=>{
-      if(result>1){
+      if(result){
         return res.status(409).json({
           message: "file with that name already exists"
         });
       }
-    }).catch((err)=>{
-      console.log(err);
-    });
-
-    User.updateOne(
+      User.updateOne(
       {
         _id: id,
       },
@@ -100,10 +99,121 @@ router.patch(
         });
       })
       .catch((err) => {
-        console.log(err);
+        return res.status(500).json({
+          err: err
+        });
       });
+    }).catch((err)=>{
+      return res.status(500).json({
+          err: err
+        });
+    });
   }
 );
+
+// rename a file
+
+router.patch('/rename/:userId', [check("fileName"), check("Authorization")],
+  (req, res) => {
+
+    const error = validationResult(req);
+    if (!error.isEmpty()) {
+      return res.status(422).json({
+        error: error.array(),
+      });
+    }
+
+    const token = req.header("Authorization");
+    let email;
+    try {
+      email = jwt.verify(token, process.env.JWT_KEY);
+    } catch (err) {
+      console.log(err);
+      return res.status(403).json({
+        message: err,
+      });
+    }
+    let currentFileName = req.body.currentFileName;
+    let newFileName = req.body.newFileName;
+    let id=req.params.userId;
+      
+    User.find({
+      _id: id, 
+      "files.fileName": currentFileName
+    }).exec().then((result)=>{
+
+      if(result<1){
+        return res.status(409).json({
+          message: "no file exists with that name"
+        });
+      }
+        let filter={
+          _id: id,
+          "files.fileName": currentFileName
+        };
+
+        let update={
+          $set: {
+            "files.$.fileName": newFileName
+          }
+        }
+
+       User.findOneAndUpdate(filter, update).exec()
+      .then((result) => {
+        res.status(200).json({
+          message: "Filename updated",
+          created: {
+            result: result
+          },
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
+
+    }).catch((err)=>{
+      console.log(err);
+    });
+
+ 
+
+                  // User.updateOne(
+                  //   {
+                  //     _id: id,
+                  //     files: {
+                  //       fileName: currentFileName
+                  //     }
+                  //   },
+                  //   {
+                  //     $push: {
+                  //       files: {
+                  //         fileName: newFileName,
+                  //       },
+                  //     },
+                  //   }
+                  // )
+                  //   .exec()
+                  //   .then((result) => {
+                  //     res.status(200).json({
+                  //       message: "Filename updated",
+                  //       created: {
+                  //         result: result
+                  //       },
+                  //     });
+                  //   })
+                  //   .catch((err) => {
+                  //     console.log(err);
+                  //   }); 
+
+}
+);
+
+// get one file for a user : (unnecessary)
+
+const escapeRegex = function(text) {
+    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+  }
 
 router.get("/:userId/:fileName", [check("Authorization")], (req, res) => {
   const error = validationResult(req);
@@ -124,10 +234,13 @@ router.get("/:userId/:fileName", [check("Authorization")], (req, res) => {
     });
   }
 
+  const regex = new RegExp(escapeRegex(req.params.fileName), 'gi');
+
+
   const id = req.params.userId;
   User.find({
     _id: id,
-    "files.fileName": req.params.fileName,
+    "files.fileName": regex,
   })
     .select("files")
     .exec()
@@ -148,6 +261,12 @@ router.get("/:userId/:fileName", [check("Authorization")], (req, res) => {
       });
     });
 });
+
+// get a file for a user
+
+
+
+// delete a file
 
 router.delete("/:userId/:fileName", [check("Authorization")], (req, res) => {
   const error = validationResult(req);

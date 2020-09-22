@@ -66,16 +66,7 @@ router.patch(
     let fileName = req.body.fileName;
     let fileData = "";
 
-    User.find({
-      _id: id, 
-      "files.fileName": fileName
-    }).exec().then((result)=>{
-      if(result){
-        return res.status(409).json({
-          message: "file with that name already exists"
-        });
-      }
-      User.updateOne(
+    User.updateOne(
       {
         _id: id,
       },
@@ -103,11 +94,24 @@ router.patch(
           err: err
         });
       });
-    }).catch((err)=>{
-      return res.status(500).json({
-          err: err
-        });
-    });
+
+
+    // User.find({
+    //   _id: id, 
+    //   "files.fileName": fileName
+    // }).exec().then((result)=>{
+    //   console.log(result);
+    //   if(result.length>2){
+    //     return res.status(409).json({
+    //       message: "file with that name already exists"
+    //     });
+    //   }
+
+    // }).catch((err)=>{
+    //   return res.status(500).json({
+    //       err: err
+    //     });
+    // });
   }
 );
 
@@ -133,13 +137,13 @@ router.patch('/rename/:userId', [check("fileName"), check("Authorization")],
         message: err,
       });
     }
-    let currentFileName = req.body.currentFileName;
     let newFileName = req.body.newFileName;
     let id=req.params.userId;
+    let fileId=req.params.fileId;
       
     User.find({
       _id: id, 
-      "files.fileName": currentFileName
+      "files._id": fileId
     }).exec().then((result)=>{
 
       if(result<1){
@@ -149,7 +153,7 @@ router.patch('/rename/:userId', [check("fileName"), check("Authorization")],
       }
         let filter={
           _id: id,
-          "files.fileName": currentFileName
+          "files._id": fileId
         };
 
         let update={
@@ -176,40 +180,10 @@ router.patch('/rename/:userId', [check("fileName"), check("Authorization")],
       console.log(err);
     });
 
- 
-
-                  // User.updateOne(
-                  //   {
-                  //     _id: id,
-                  //     files: {
-                  //       fileName: currentFileName
-                  //     }
-                  //   },
-                  //   {
-                  //     $push: {
-                  //       files: {
-                  //         fileName: newFileName,
-                  //       },
-                  //     },
-                  //   }
-                  // )
-                  //   .exec()
-                  //   .then((result) => {
-                  //     res.status(200).json({
-                  //       message: "Filename updated",
-                  //       created: {
-                  //         result: result
-                  //       },
-                  //     });
-                  //   })
-                  //   .catch((err) => {
-                  //     console.log(err);
-                  //   }); 
-
-}
+  }
 );
 
-// get one file for a user : (unnecessary)
+// get one file for a user : 
 
 const escapeRegex = function(text) {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
@@ -268,7 +242,7 @@ router.get("/:userId/:fileName", [check("Authorization")], (req, res) => {
 
 // delete a file
 
-router.delete("/:userId/:fileName", [check("Authorization")], (req, res) => {
+router.delete("/:userId&:fileName", [check("Authorization")], (req, res) => {
   const error = validationResult(req);
   if (!error.isEmpty()) {
     return res.status(422).json({
@@ -286,6 +260,7 @@ router.delete("/:userId/:fileName", [check("Authorization")], (req, res) => {
       message: err,
     });
   }
+
   const id = req.params.userId;
   const fileName = req.params.fileName;
   User.updateOne(
@@ -294,9 +269,7 @@ router.delete("/:userId/:fileName", [check("Authorization")], (req, res) => {
     },
     {
       $pull: {
-        files: {
-          fileName: fileName,
-        },
+        "files.fileName": fileName,
       },
     }
   )

@@ -4,9 +4,29 @@ const jwt = require("jsonwebtoken");
 const { check, validationResult } = require("express-validator");
 const { User } = require("../models/model.js");
 
+const authenticateJWT = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+
+    if (authHeader) {
+        const token = authHeader.split(' ')[1];
+
+        jwt.verify(token, process.env.JWT_KEY, (err, user) => {
+            if (err) {
+                return res.sendStatus(403);
+            }
+
+            req.user = user;
+            next();
+        });
+    } else {
+        res.sendStatus(401);
+    }
+};
+
+
 // get all files for a user
 
-router.get("/:userId", [check("Authorization")], (req, res) => {
+router.get("/:userId", [check("Authorization")], authenticateJWT, (req, res) => {
   const error = validationResult(req);
   if (!error.isEmpty()) {
     return res.status(422).json({
@@ -40,7 +60,7 @@ router.get("/:userId", [check("Authorization")], (req, res) => {
 
 router.patch(
   "/createFile/:userId",
-  [check("fileName"), check("Authorization")],
+  [check("fileName"), check("Authorization")], authenticateJWT,
   (req, res) => {
 
     const error = validationResult(req);
@@ -117,7 +137,7 @@ router.patch(
 
 // rename a file
 
-router.patch('/rename/:userId', [check("fileName"), check("Authorization")],
+router.patch('/rename/:userId', [check("fileName"), check("Authorization")], authenticateJWT,
   (req, res) => {
 
     const error = validationResult(req);
@@ -189,7 +209,7 @@ const escapeRegex = function(text) {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
   }
 
-router.get("/:userId/:fileName", [check("Authorization")], (req, res) => {
+router.get("/:userId/:fileName", [check("Authorization")], authenticateJWT, (req, res) => {
   const error = validationResult(req);
   if (!error.isEmpty()) {
     return res.status(422).json({
@@ -242,7 +262,7 @@ router.get("/:userId/:fileName", [check("Authorization")], (req, res) => {
 
 // delete a file
 
-router.delete("/:userId&:fileName", [check("Authorization")], (req, res) => {
+router.delete("/:userId&:fileName", [check("Authorization")], authenticateJWT, (req, res) => {
   const error = validationResult(req);
   if (!error.isEmpty()) {
     return res.status(422).json({

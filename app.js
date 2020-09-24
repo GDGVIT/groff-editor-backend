@@ -100,7 +100,7 @@ io.on("connection", (person) => {
 
     let command = 'printf "' + data + '"';
 
-    child = exec(`${command} | groff -i -ms -T html`, (err, stdout, stderr) => {
+    child = exec(`${command} | groff -i -ms -T pdf`, (err, stdout, stderr) => {
       if (err) {
         console.log(`Error: ${err.message}`);
       }

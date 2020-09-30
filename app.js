@@ -8,13 +8,12 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const morgan = require("morgan");
 const socket = require("socket.io");
+const fs = require("fs");
+const btoa = require("btoa");
 // const WebSocket = require("ws");
 
 const { exec } = require("child_process");
-const { 
-  check, 
-  validationResult 
-} = require("express-validator");
+const { check, validationResult } = require("express-validator");
 
 // var data = "";
 const loginRoute = require("./Login/routes/login");
@@ -29,9 +28,9 @@ const port = process.env.PORT || 3000;
 app.use(morgan("dev"));
 app.use(express.static("public"));
 app.use(
-  bp.urlencoded({
-    extended: false,
-  })
+	bp.urlencoded({
+		extended: false,
+	})
 );
 app.use(bp.json());
 app.use(cors());
@@ -39,18 +38,15 @@ app.use(cors());
 // mongo db
 
 mongoose.set("useCreateIndex", true);
-mongoose.connect(
-    process.env.MONGO_URL,
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  }
-);
+mongoose.connect(process.env.MONGO_URL, {
+	useNewUrlParser: true,
+	useUnifiedTopology: true,
+});
 
 // listen port
 
 const server = app.listen(port, function () {
-  console.log(`Server started at ${port}`);
+	console.log(`Server started at ${port}`);
 });
 
 // routes
@@ -61,54 +57,60 @@ app.use("/preview", previewRoute);
 
 let child;
 var io = socket(server);
-io.origins('*:*');
+io.origins("*:*");
 io.on("connection", (person) => {
+	console.log(`made socket connection : ${person.id}`);
 
-  console.log(`made socket connection : ${person.id}`);
+	person.on("cmd", function (val) {
+		let val_json = JSON.parse(val);
 
-  person.on("cmd", function (val) {
-  
-    let val_json = JSON.parse(val);
+		let token = val_json.token;
+		let user_id = val_json.user_id;
+		let fileName = val_json.fileName;
+		let data = val_json.data;
+		let email;
+		try {
+			email = jwt.verify(token, process.env.JWT_KEY);
+		} catch (err) {
+			console.log(err);
+		}
 
-    let token = val_json.token;
-    let user_id = val_json.user_id;
-    let fileName = val_json.fileName;
-    let data = val_json.data;
-    let email;
-    try {
-      email = jwt.verify(token, process.env.JWT_KEY);
-    } catch (err) {
-      console.log(err);
-    }
-    
-    User.updateOne(
-      {
-        _id: user_id,
-        "files.fileName": fileName,
-      },
-      {
-        $set: { "files.$.fileData": data },
-      }
-    )
-      .exec()
-      .then((result) => {
-        console.log("File updated");
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+		User.updateOne(
+			{
+				_id: user_id,
+				"files.fileName": fileName,
+			},
+			{
+				$set: { "files.$.fileData": data },
+			}
+		)
+			.exec()
+			.then((result) => {
+				console.log("File updated");
+			})
+			.catch((err) => {
+				console.log(err);
+			});
 
-    let command = 'printf "' + data + '"';
+		let command = 'printf "' + data + '"';
 
-    child = exec(`${command} | groff -i -ms -T pdf`, (err, stdout, stderr) => {
-      if (err) {
-        console.log(`Error: ${err.message}`);
-      }
-      if (stderr) {
-        console.log(`Error: ${stderr}`);
-      }
-      // console.log(stdout)
-      person.emit("cmd", stdout);
-    });
-  });
+		child = exec(
+			`${command} | groff -i -ms -T pdf > ${user_id}.pdf`,
+			(err, stdout, stderr) => {
+				fs.readFile(`${user_id}.pdf`, "binary", (err, data) => {
+					if (err) {
+						return console.log("Error:" + err);
+					}
+					let buff = btoa(data);
+					person.emit("cmd", buff);
+				});
+				if (err) {
+					console.log(`Error: ${err.message}`);
+				}
+				if (stderr) {
+					console.log(`Error: ${stderr}`);
+				}
+			}
+		);
+	});
 });

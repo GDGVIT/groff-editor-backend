@@ -26,14 +26,14 @@ const authenticateJWT = (req, res, next) => {
 
 // get all files for a user
 
-router.get("/:userId", [check("Authorization")], authenticateJWT, (req, res) => {
+router.get("/user", [check("Authorization")], authenticateJWT, (req, res) => {
   const error = validationResult(req);
   if (!error.isEmpty()) {
     return res.status(422).json({
       error: error.array(),
     });
   }
-  let userId = req.params.userId;
+  let userId = req.body.userId;
   User.find({ _id: userId })
     .select("files")
     .exec()
@@ -59,8 +59,8 @@ router.get("/:userId", [check("Authorization")], authenticateJWT, (req, res) => 
 // create a new file
 
 router.patch(
-  "/createFile/:userId",
-  [check("fileName"), check("Authorization")], authenticateJWT,
+  "/createFile",
+  [check("Authorization")], authenticateJWT,
   (req, res) => {
 
     const error = validationResult(req);
@@ -81,7 +81,7 @@ router.patch(
       });
     }
 
-    let id = req.params.userId;
+    let id = req.body.userId;
 
     let fileName = req.body.fileName;
     let fileData = "";
@@ -114,30 +114,12 @@ router.patch(
           err: err
         });
       });
-
-
-    // User.find({
-    //   _id: id, 
-    //   "files.fileName": fileName
-    // }).exec().then((result)=>{
-    //   console.log(result);
-    //   if(result.length>2){
-    //     return res.status(409).json({
-    //       message: "file with that name already exists"
-    //     });
-    //   }
-
-    // }).catch((err)=>{
-    //   return res.status(500).json({
-    //       err: err
-    //     });
-    // });
   }
 );
 
 // rename a file
 
-router.patch('/rename/:userId', [check("fileName"), check("Authorization")], authenticateJWT,
+router.patch('/rename', [check("Authorization")], authenticateJWT,
   (req, res) => {
 
     const error = validationResult(req);
@@ -158,8 +140,8 @@ router.patch('/rename/:userId', [check("fileName"), check("Authorization")], aut
       });
     }
     let newFileName = req.body.newFileName;
-    let id=req.params.userId;
-    let fileId=req.params.fileId;
+    let id=req.body.userId;
+    let fileId=req.body.fileId;
       
     User.find({
       _id: id, 
@@ -209,7 +191,7 @@ const escapeRegex = function(text) {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
   }
 
-router.get("/:userId/:fileName", [check("Authorization")], authenticateJWT, (req, res) => {
+router.get("/searchFile/:fileName", [check("Authorization"), check("fileName")], authenticateJWT, (req, res) => {
   const error = validationResult(req);
   if (!error.isEmpty()) {
     return res.status(422).json({
@@ -231,7 +213,7 @@ router.get("/:userId/:fileName", [check("Authorization")], authenticateJWT, (req
   const regex = new RegExp(escapeRegex(req.params.fileName), 'gi');
 
 
-  const id = req.params.userId;
+  const id = req.body.userId;
   User.find({
     _id: id,
     "files.fileName": regex,
@@ -262,7 +244,7 @@ router.get("/:userId/:fileName", [check("Authorization")], authenticateJWT, (req
 
 // delete a file
 
-router.delete("/:userId&:fileName", [check("Authorization")], authenticateJWT, (req, res) => {
+router.delete("/deleteFile/:fileName", [check("Authorization"), check("fileName")], authenticateJWT, (req, res) => {
   const error = validationResult(req);
   if (!error.isEmpty()) {
     return res.status(422).json({
@@ -281,7 +263,7 @@ router.delete("/:userId&:fileName", [check("Authorization")], authenticateJWT, (
     });
   }
 
-  const id = req.params.userId;
+  const id = req.body.userId;
   const fileName = req.params.fileName;
   User.updateOne(
     {

@@ -3,18 +3,18 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 const { check, validationResult } = require("express-validator");
 const { User } = require("../models/model.js");
+const mongoose = require("mongoose");
 
 const authenticateJWT = (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (authHeader) {
-        const token = authHeader.split(' ')[1];
+        const token = authHeader;
 
         jwt.verify(token, process.env.JWT_KEY, (err, user) => {
             if (err) {
                 return res.sendStatus(403);
             }
-
             req.user = user;
             next();
         });
@@ -82,7 +82,6 @@ router.patch(
     }
 
     let id = req.body.userId;
-
     let fileName = req.body.fileName;
     let fileData = "";
 
@@ -93,6 +92,7 @@ router.patch(
       {
         $push: {
           files: {
+            id: new mongoose.Types.ObjectId(),
             fileName: fileName,
             fileData: fileData,
           },
@@ -104,6 +104,7 @@ router.patch(
         res.status(200).json({
           message: "File created",
           created: {
+            _id: id,
             fileName: fileName,
             fileData: fileData,
           },
@@ -139,6 +140,7 @@ router.patch('/rename', [check("Authorization")], authenticateJWT,
         message: err,
       });
     }
+    
     let newFileName = req.body.newFileName;
     let id=req.body.userId;
     let fileId=req.body.fileId;
@@ -191,7 +193,7 @@ const escapeRegex = function(text) {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
   }
 
-router.get("/searchFile/:fileName", [check("Authorization"), check("fileName")], authenticateJWT, (req, res) => {
+router.get("/searchFile", [check("Authorization")], authenticateJWT, (req, res) => {
   const error = validationResult(req);
   if (!error.isEmpty()) {
     return res.status(422).json({
@@ -210,13 +212,13 @@ router.get("/searchFile/:fileName", [check("Authorization"), check("fileName")],
     });
   }
 
-  const regex = new RegExp(escapeRegex(req.params.fileName), 'gi');
+  // const regex = new RegExp(escapeRegex(req.params.fileName), 'gi');
 
-
+  const fileId = req.body.fileId;
   const id = req.body.userId;
   User.find({
     _id: id,
-    "files.fileName": regex,
+    "files.fileId": fileId,
   })
     .select("files")
     .exec()
@@ -244,7 +246,7 @@ router.get("/searchFile/:fileName", [check("Authorization"), check("fileName")],
 
 // delete a file
 
-router.delete("/deleteFile/:fileName", [check("Authorization"), check("fileName")], authenticateJWT, (req, res) => {
+router.delete("/deleteFile", [check("Authorization"), check("fileName")], authenticateJWT, (req, res) => {
   const error = validationResult(req);
   if (!error.isEmpty()) {
     return res.status(422).json({
@@ -264,6 +266,7 @@ router.delete("/deleteFile/:fileName", [check("Authorization"), check("fileName"
   }
 
   const id = req.body.userId;
+  const fileId = req.body.fileId;
   const fileName = req.params.fileName;
   User.updateOne(
     {
@@ -271,7 +274,7 @@ router.delete("/deleteFile/:fileName", [check("Authorization"), check("fileName"
     },
     {
       $pull: {
-        "files.fileName": fileName,
+        "files.fileId": fileId,
       },
     }
   )

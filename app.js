@@ -10,6 +10,7 @@ const morgan = require("morgan");
 const socket = require("socket.io");
 const fs = require("fs");
 const btoa = require("btoa");
+const bash = require("bash");
 // const WebSocket = require("ws");
 
 const { exec } = require("child_process");
@@ -92,7 +93,7 @@ io.on("connection", (person) => {
 				console.log(err);
 			});
 
-		let command = 'printf "' + data + '"';
+		let command = bash.escape('printf "' + data + '"');
 
 		child = exec(
 			`${command} | groff -i -ms -T pdf > ${user_id}.pdf`,

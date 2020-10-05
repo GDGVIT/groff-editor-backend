@@ -150,4 +150,9 @@ router.delete("/delete/:userId", (req, res) => {
     });
 });
 
+// router.get('/logout', [check("Authorization"), check("fileName")], authenticateJWT, (req,res)=>{
+//   if()
+// });
+
+
 module.exports = router;

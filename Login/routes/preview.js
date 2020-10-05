@@ -5,6 +5,13 @@ const { check, validationResult } = require("express-validator");
 const { User } = require("../models/model.js");
 const mongoose = require("mongoose");
 
+const path = require('path');
+const mime = require('file-type');
+const stream = require('stream');
+const fs = require("fs");
+const path = require("path");
+let filePath;
+
 const authenticateJWT = (req, res, next) => {
     const authHeader = req.headers.authorization;
 
@@ -23,6 +30,71 @@ const authenticateJWT = (req, res, next) => {
     }
 };
 
+function decode(token){
+  const decodedToken = jwt.decode(token, {
+  complete: true
+ });
+  return decodedToken.payload.userId;
+}
+
+// download pdf
+
+// function getStdout(){
+
+// }
+
+// router.get('/download', [check("Authorization")], authenticateJWT, async (req, res) => {
+
+//   const stdout = getStdout();
+//   const filename = "whatever.pdf";
+//   const filestream = new stream.PassThrough();
+//   filestream.end(stdout);
+
+//   res.setHeader('Content-disposition', 'attachment; filename=' + filename);
+//   res.setHeader('Content-type', 'application/pdf');
+
+//   filestream.pipe(res);
+// });
+
+router.get('/download', [check("Authorization")], authenticateJWT, async (req, res) =>{
+
+  const error = validationResult(req);
+    if (!error.isEmpty()) {
+      return res.status(422).json({
+        error: error.array(),
+      });
+    }
+
+    const token = req.header("Authorization");
+    let email;
+    try {
+      email = jwt.verify(token, process.env.JWT_KEY);
+    } catch (err) {
+      console.log(err);
+      return res.status(403).json({
+        message: err,
+      });
+    }
+
+    let userId = decode(token);
+
+    filePath=path.resolve(`./${userId}`);
+
+    res.download(filePath, 'my-project.pdf', (err)=>{
+      if(err){
+        console.log(err);
+        res.status(404).json({
+          message: "requsted file not found"
+        });
+      }else{
+        res.status(200).json({
+          message: "file served"
+        });
+      }
+    });
+
+});
+
 // get all files for a user
 
 router.get("/user", [check("Authorization")], authenticateJWT, (req, res) => {
@@ -33,7 +105,7 @@ router.get("/user", [check("Authorization")], authenticateJWT, (req, res) => {
     });
   }
 
-  let userId = req.body.userId;
+  let userId = decode(token);
   User.find({ _id: userId })
     .select("files")
     .exec()
@@ -81,7 +153,7 @@ router.patch(
       });
     }
 
-    let id = req.body.userId;
+    let id = decode(token);
     let fileId = new mongoose.Types.ObjectId();
     let fileName = req.body.fileName;
     let fileData = "";
@@ -93,7 +165,7 @@ router.patch(
       {
         $push: {
           files: {
-            id: fileId,
+            _id: fileId,
             fileName: fileName,
             fileData: fileData,
           },
@@ -143,19 +215,14 @@ router.patch('/rename', [check("Authorization")], authenticateJWT,
     }
 
     let newFileName = req.body.newFileName;
-    let id=req.body.userId;
+    let id = decode(token);
     let fileId=req.body.fileId;
       
     User.find({
       _id: id, 
       "files._id": fileId
     }).exec().then((result)=>{
-      let len=result.length;
-      if(len<3){
-        return res.status(409).json({
-          message: result
-        });
-      }
+      
         let filter={
           _id: id,
           "files._id": fileId
@@ -263,7 +330,7 @@ router.delete("/deleteFile", [check("Authorization"), check("fileName")], authen
     });
   }
 
-  const id = req.body.userId;
+  const id = decode(token);
   const fileId = req.body.fileId;
   User.updateOne(
     {

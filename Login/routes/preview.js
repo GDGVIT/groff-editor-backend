@@ -23,7 +23,6 @@ const authenticateJWT = (req, res, next) => {
     }
 };
 
-
 // get all files for a user
 
 router.get("/user", [check("Authorization")], authenticateJWT, (req, res) => {
@@ -33,6 +32,7 @@ router.get("/user", [check("Authorization")], authenticateJWT, (req, res) => {
       error: error.array(),
     });
   }
+
   let userId = req.body.userId;
   User.find({ _id: userId })
     .select("files")
@@ -82,6 +82,7 @@ router.patch(
     }
 
     let id = req.body.userId;
+    let fileId = new mongoose.Types.ObjectId();
     let fileName = req.body.fileName;
     let fileData = "";
 
@@ -92,7 +93,7 @@ router.patch(
       {
         $push: {
           files: {
-            id: new mongoose.Types.ObjectId(),
+            id: fileId,
             fileName: fileName,
             fileData: fileData,
           },
@@ -104,7 +105,7 @@ router.patch(
         res.status(200).json({
           message: "File created",
           created: {
-            _id: id,
+            _id: fileId,
             fileName: fileName,
             fileData: fileData,
           },
@@ -140,7 +141,7 @@ router.patch('/rename', [check("Authorization")], authenticateJWT,
         message: err,
       });
     }
-    
+
     let newFileName = req.body.newFileName;
     let id=req.body.userId;
     let fileId=req.body.fileId;
@@ -149,10 +150,10 @@ router.patch('/rename', [check("Authorization")], authenticateJWT,
       _id: id, 
       "files._id": fileId
     }).exec().then((result)=>{
-
-      if(result<1){
+      let len=result.length;
+      if(len<3){
         return res.status(409).json({
-          message: "no file exists with that name"
+          message: result
         });
       }
         let filter={
@@ -189,59 +190,56 @@ router.patch('/rename', [check("Authorization")], authenticateJWT,
 
 // get one file for a user : 
 
-const escapeRegex = function(text) {
-    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-  }
+// const escapeRegex = function(text) {
+//     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+//   }
 
-router.get("/searchFile", [check("Authorization")], authenticateJWT, (req, res) => {
-  const error = validationResult(req);
-  if (!error.isEmpty()) {
-    return res.status(422).json({
-      error: error.array(),
-    });
-  }
+// router.get("/searchFile", [check("Authorization")], authenticateJWT, (req, res) => {
+//   const error = validationResult(req);
+//   if (!error.isEmpty()) {
+//     return res.status(422).json({
+//       error: error.array(),
+//     });
+//   }
 
-  const token = req.header("Authorization");
-  let email;
-  try {
-    email = jwt.verify(token, process.env.JWT_KEY);
-  } catch (err) {
-    console.log(err);
-    return res.status(403).json({
-      message: err,
-    });
-  }
+//   const token = req.header("Authorization");
+//   let email;
+//   try {
+//     email = jwt.verify(token, process.env.JWT_KEY);
+//   } catch (err) {
+//     console.log(err);
+//     return res.status(403).json({
+//       message: err,
+//     });
+//   }
 
-  // const regex = new RegExp(escapeRegex(req.params.fileName), 'gi');
+//   // const regex = new RegExp(escapeRegex(req.params.fileName), 'gi');
 
-  const fileId = req.body.fileId;
-  const id = req.body.userId;
-  User.find({
-    _id: id,
-    "files.fileId": fileId,
-  })
-    .select("files")
-    .exec()
-    .then((doc) => {
-      console.log(doc);
-      if (doc) {
-        res.status(200).json(doc[0].files);
-      } else {
-        res.status(404).json({
-          message: "No data saved for this file name",
-        });
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json({
-        err: err,
-      });
-    });
-});
-
-// get a file for a user
-
+//   const fileId = req.body.fileId;
+//   const id = req.body.userId;
+//   User.find({
+//     _id: id,
+//     "files.fileId": fileId,
+//   })
+//     .select("files")
+//     .exec()
+//     .then((doc) => {
+//       console.log(doc);
+//       if (doc) {
+//         res.status(200).json(doc);
+//       } else {
+//         res.status(404).json({
+//           message: "No data saved for this file name",
+//         });
+//       }
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//       res.status(500).json({
+//         err: err,
+//       });
+//     });
+// });
 
 
 // delete a file
@@ -267,14 +265,15 @@ router.delete("/deleteFile", [check("Authorization"), check("fileName")], authen
 
   const id = req.body.userId;
   const fileId = req.body.fileId;
-  const fileName = req.params.fileName;
   User.updateOne(
     {
       _id: id,
     },
     {
-      $pull: {
-        "files.fileId": fileId,
+      "$pull": {
+        "files":{
+          "_id": fileId
+        }
       },
     }
   )

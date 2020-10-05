@@ -10,10 +10,10 @@ const output = document.getElementById("render");
 
 btn.addEventListener("click", function(){
     var val = {
-        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImpvaG4uZG9lQGV4YW1wbGUuY29tIiwidXNlcklkIjoiNWY0NzQ2NjY4NzJkNmExNDFmNTNkYTIwIiwiaWF0IjoxNTk4NTA2NjMxLCJleHAiOjE1OTg1MTAyMzF9.2xlDLF3RN37BWBO172bEpNr1ydRH5DdSTGDSB4hjiLk",
-        user_id: "5f474666872d6a141f53da20",
-        fileName: "sampletext.txt",
-        data: command.value
+        token: process.env.TEST_TOKEN, 
+        user_id: "5f474666872d6a141f53da20", //dummy id
+        fileName: "sampletext.txt", // dummy filename
+        data: command.value 
     }
     socket.emit("cmd", JSON.stringify(val));
 });

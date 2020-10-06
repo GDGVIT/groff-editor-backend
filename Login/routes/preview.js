@@ -9,7 +9,6 @@ const path = require('path');
 const mime = require('file-type');
 const stream = require('stream');
 const fs = require("fs");
-const path = require("path");
 let filePath;
 
 const authenticateJWT = (req, res, next) => {

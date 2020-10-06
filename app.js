@@ -52,9 +52,9 @@ const server = app.listen(port, function () {
 
 // routes
 
-app.use("/api/auth", oAuthRoute);
-app.use("/api/manauth", loginRoute);
-app.use("/api/preview", previewRoute);
+app.use("/auth", oAuthRoute);
+app.use("/manauth", loginRoute);
+app.use("/preview", previewRoute);
 
 let child;
 var io = socket(server);

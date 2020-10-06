@@ -1,4 +1,4 @@
-var socket = io.connect('http://localhost:3000/');
+var socket = io.connect('http://groffapi.dscvit.com/api');
 
 // Query DOM
 

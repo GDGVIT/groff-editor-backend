@@ -22,7 +22,7 @@ const oAuthRoute = require("./Login/routes/oAuth");
 const previewRoute = require("./Login/routes/preview");
 const { User } = require("./Login/models/model");
 
-const port = process.env.PORT || 3000;
+const port = process.env.BACKEND_PORT || 3000;
 
 // middle-wares
 

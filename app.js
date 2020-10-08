@@ -63,7 +63,7 @@ app.use("/api/preview", previewRoute);
 let child;
 var io = socket(server,{path: '/api/socket.io'});
 io.origins("*:*");
-io.of('/api/socket.io').on("connection", (person) => {
+io.on("connection", (person) => {
 	console.log(`made socket connection : ${person.id}`);
 
 	person.on("cmd", function (val) {

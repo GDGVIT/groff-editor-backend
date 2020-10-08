@@ -1,4 +1,4 @@
-var socket = io.connect('http://localhost:3000');
+var socket = io.connect('http://52.237.109.213:3000');
 
 // Query DOM
 

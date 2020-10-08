@@ -36,6 +36,10 @@ app.use(
 app.use(bp.json());
 app.use(cors());
 
+app.get("/ping",(_req,res)=>{
+	res.json({"Health":"Ok"})
+})
+
 // mongo db
 
 mongoose.set("useCreateIndex", true);

@@ -93,7 +93,7 @@ io.on("connection", (person) => {
 				console.log(err);
 			});
 
-		let command = bash.escape('printf "' + data + '"');
+		let command = 'printf "' + data + '"';
 
 		child = exec(
 			`${command} | groff -i -ms -T pdf > ${user_id}.pdf`,

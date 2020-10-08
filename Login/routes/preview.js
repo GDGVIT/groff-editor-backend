@@ -12,11 +12,9 @@ const fs = require("fs");
 let filePath;
 
 const authenticateJWT = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-
+    const authHeader = req.header("Authorization");
     if (authHeader) {
         const token = authHeader;
-
         jwt.verify(token, process.env.JWT_KEY, (err, user) => {
             if (err) {
                 return res.sendStatus(403);
@@ -29,12 +27,12 @@ const authenticateJWT = (req, res, next) => {
     }
 };
 
-function decode(token){
-  const decodedToken = jwt.decode(token, {
-  complete: true
- });
-  return decodedToken.payload.userId;
-}
+// function decode(token){
+//   const decodedToken = jwt.decode(token, {
+//   complete: true
+//  });
+//   return decodedToken.payload.userId;
+// }
 
 // download pdf
 
@@ -56,29 +54,14 @@ function decode(token){
 // });
 
 router.get('/download', [check("Authorization")], authenticateJWT, async (req, res) =>{
-
   const error = validationResult(req);
     if (!error.isEmpty()) {
       return res.status(422).json({
         error: error.array(),
       });
     }
-
-    const token = req.header("Authorization");
-    let email;
-    try {
-      email = jwt.verify(token, process.env.JWT_KEY);
-    } catch (err) {
-      console.log(err);
-      return res.status(403).json({
-        message: err,
-      });
-    }
-
-    let userId = decode(token);
-
+    let userId = req.user.userId;
     filePath=path.resolve(`./${userId}`);
-
     res.download(filePath, 'my-project.pdf', (err)=>{
       if(err){
         console.log(err);
@@ -91,7 +74,6 @@ router.get('/download', [check("Authorization")], authenticateJWT, async (req, r
         });
       }
     });
-
 });
 
 // get all files for a user
@@ -104,7 +86,7 @@ router.get("/user", [check("Authorization")], authenticateJWT, (req, res) => {
     });
   }
 
-  let userId = decode(token);
+  let userId = req.user.userId;
   User.find({ _id: userId })
     .select("files")
     .exec()
@@ -140,19 +122,7 @@ router.patch(
         error: error.array(),
       });
     }
-
-    const token = req.header("Authorization");
-    let email;
-    try {
-      email = jwt.verify(token, process.env.JWT_KEY);
-    } catch (err) {
-      console.log(err);
-      return res.status(403).json({
-        message: err,
-      });
-    }
-
-    let id = decode(token);
+    let id = req.user.userId;
     let fileId = new mongoose.Types.ObjectId();
     let fileName = req.body.fileName;
     let fileData = "";
@@ -202,19 +172,8 @@ router.patch('/rename', [check("Authorization")], authenticateJWT,
       });
     }
 
-    const token = req.header("Authorization");
-    let email;
-    try {
-      email = jwt.verify(token, process.env.JWT_KEY);
-    } catch (err) {
-      console.log(err);
-      return res.status(403).json({
-        message: err,
-      });
-    }
-
     let newFileName = req.body.newFileName;
-    let id = decode(token);
+    let id = req.user.userId;
     let fileId=req.body.fileId;
       
     User.find({
@@ -317,19 +276,7 @@ router.delete("/deleteFile", [check("Authorization"), check("fileName")], authen
       error: error.array(),
     });
   }
-
-  const token = req.header("Authorization");
-  let email;
-  try {
-    email = jwt.verify(token, process.env.JWT_KEY);
-  } catch (err) {
-    console.log(err);
-    return res.status(403).json({
-      message: err,
-    });
-  }
-
-  const id = decode(token);
+  const id = req.user.userId;
   const fileId = req.body.fileId;
   User.updateOne(
     {

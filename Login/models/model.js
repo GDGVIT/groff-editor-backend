@@ -19,7 +19,12 @@ const userSchema = mongoose.Schema({
         min: 6,
         max: 30
     },
-    files: [fileSchema]
+    files: [fileSchema],
+    timestamps: {
+        createdAt: {type: Date, require: true, default: new Date(),
+        updatedAt: {type: Date, default: new Date()}
+        }
+    }
 });
 
 module.exports.User = mongoose.model('User', userSchema);

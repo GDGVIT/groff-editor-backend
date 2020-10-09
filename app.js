@@ -79,11 +79,14 @@ io.on("connection", (person) => {
 		} catch (err) {
 			console.log(err);
 		}
-
+		let timestamps={
+			updatedAt: new Date()
+		}
 		User.updateOne(
 			{
 				_id: user_id,
 				"files.fileName": fileName,
+				timestamps: timestamps
 			},
 			{
 				$set: { "files.$.fileData": data },

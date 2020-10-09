@@ -27,31 +27,7 @@ const authenticateJWT = (req, res, next) => {
     }
 };
 
-// function decode(token){
-//   const decodedToken = jwt.decode(token, {
-//   complete: true
-//  });
-//   return decodedToken.payload.userId;
-// }
-
-// download pdf
-
-// function getStdout(){
-
-// }
-
-// router.get('/download', [check("Authorization")], authenticateJWT, async (req, res) => {
-
-//   const stdout = getStdout();
-//   const filename = "whatever.pdf";
-//   const filestream = new stream.PassThrough();
-//   filestream.end(stdout);
-
-//   res.setHeader('Content-disposition', 'attachment; filename=' + filename);
-//   res.setHeader('Content-type', 'application/pdf');
-
-//   filestream.pipe(res);
-// });
+// to download files
 
 router.get('/download', [check("Authorization")], authenticateJWT, async (req, res) =>{
   const error = validationResult(req);
@@ -126,6 +102,10 @@ router.patch(
     let fileId = new mongoose.Types.ObjectId();
     let fileName = req.body.fileName;
     let fileData = "";
+    let timestamps = {
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
 
     User.updateOne(
       {
@@ -137,6 +117,7 @@ router.patch(
             _id: fileId,
             fileName: fileName,
             fileData: fileData,
+            timestamps: timestamps
           },
         },
       }
@@ -149,6 +130,7 @@ router.patch(
             _id: fileId,
             fileName: fileName,
             fileData: fileData,
+            timestamps: timestamps
           },
         });
       })

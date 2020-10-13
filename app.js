@@ -111,7 +111,7 @@ io.on("connection", (person) => {
 					}
 					let buff = btoa(data);
 					person.emit("cmd", buff);
-					console.log(buff);
+					// console.log(buff);
 				});
 				if (err) {
 					console.log(`Error: ${err.message}`);

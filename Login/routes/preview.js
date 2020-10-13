@@ -37,15 +37,15 @@ router.get('/download', [check("Authorization")], authenticateJWT, async (req, r
       });
     }
     let userId = req.user.userId;
-    filePath=path.resolve(`./${userId}`);
+    filePath=path.resolve(`${process.cwd()}/${userId}.pdf`);
     res.download(filePath, 'my-project.pdf', (err)=>{
       if(err){
         console.log(err);
-        res.status(404).json({
+        return res.status(404).json({
           message: "requsted file not found"
         });
       }else{
-        res.status(200).json({
+        return res.status(200).json({
           message: "file served"
         });
       }

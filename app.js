@@ -13,7 +13,7 @@ const btoa = require("btoa");
 const bash = require("bash");
 // const WebSocket = require("ws");
 
-const { exec } = require("child_process");
+const { exec, execFile } = require("child_process");
 const { check, validationResult } = require("express-validator");
 
 // var data = "";
@@ -46,6 +46,7 @@ mongoose.set("useCreateIndex", true);
 mongoose.connect(process.env.MONGO_URL, {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
+	useFindAndModify: false
 });
 
 // listen port
@@ -67,13 +68,18 @@ io.on("connection", (person) => {
 	console.log(`made socket connection : ${person.id}`);
 
 	person.on("cmd", function (val) {
-		let val_json = JSON.parse(val);
+        try{
+					let val_json = JSON.parse(val);
+					let token = val_json.token;
+					let user_id = val_json.user_id;
+					let fileName = val_json.fileName;
+					let data = val_json.data;
+					let email;
+        } catch(err) {
+        	console.log(err);
+        }
 
-		let token = val_json.token;
-		let user_id = val_json.user_id;
-		let fileName = val_json.fileName;
-		let data = val_json.data;
-		let email;
+		
 		try {
 			email = jwt.verify(token, process.env.JWT_KEY);
 		} catch (err) {
@@ -85,11 +91,10 @@ io.on("connection", (person) => {
 		User.updateOne(
 			{
 				_id: user_id,
-				"files.fileName": fileName,
-				timestamps: timestamps
+				"files.fileName": fileName
 			},
 			{
-				$set: { "files.$.fileData": data },
+				$set: { "files.$.fileData": data, "files.$.timestamps": timestamps },
 			}
 		)
 			.exec()
@@ -111,7 +116,7 @@ io.on("connection", (person) => {
 					}
 					let buff = btoa(data);
 					person.emit("cmd", buff);
-					console.log(buff);
+					// console.log(buff);
 				});
 				if (err) {
 					console.log(`Error: ${err.message}`);
@@ -121,5 +126,13 @@ io.on("connection", (person) => {
 				}
 			}
 		);
+
+		// child = execFile('printf', [data, "|", "groff", "-i", "-ms", "-T", "pdf", ">", `${userId}.pdf`],  (error, stdout, stderr) => {
+		//   if (error) {
+		//     throw error;
+		//     console.log(error);
+		//   }
+		//   console.log(stdout);
+		// });
 	});
 });

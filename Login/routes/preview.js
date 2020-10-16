@@ -202,9 +202,7 @@ router.get("/getFile", [check("Authorization")], authenticateJWT, (req, res) => 
   })
     .exec()
     .then((doc) => {
-      console.log(doc);
       if (doc) {
-		  console.log(doc)
         const newDoc = doc.files.filter(file => file.fileId.toString() === fileId.toString());
         res.status(200).json(newDoc);
       } else {

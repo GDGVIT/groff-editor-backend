@@ -37,7 +37,7 @@ router.get('/download', [check("Authorization")], authenticateJWT, async (req, r
       });
     }
     let userId = req.user.userId;
-    filePath=path.resolve(`./${userId}`);
+    filePath=path.resolve(`./${userId}.pdf`);
     res.download(filePath, 'my-project.pdf', (err)=>{
       if(err){
         console.log(err);
@@ -45,9 +45,9 @@ router.get('/download', [check("Authorization")], authenticateJWT, async (req, r
           message: "requsted file not found"
         });
       }else{
-        res.status(200).json({
-          message: "file served"
-        });
+        // res.status(200).json({
+        //   message: "file served"
+        // });
       }
     });
 });
@@ -202,12 +202,13 @@ router.get("/getFile", [check("Authorization")], authenticateJWT, (req, res) => 
 
   User.findOne({
     _id: id,
-    "files.fileId": fileId,
+    // "files.fileId": fileId,
   })
     .exec()
     .then((doc) => {
       console.log(doc);
       if (doc) {
+		  console.log(doc)
         const newDoc = doc.files.filter(file => file.fileId.toString() === fileId.toString());
         res.status(200).json(newDoc);
       } else {
@@ -243,7 +244,7 @@ router.delete("/deleteFile", [check("Authorization"), check("fileName")], authen
     {
       "$pull": {
         "files":{
-          "_id": fileId
+          "fileId": fileId
         }
       },
     }

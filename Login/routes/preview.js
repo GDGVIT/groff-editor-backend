@@ -101,7 +101,7 @@ router.patch(
     let id = req.user.userId;
     let fileId = new mongoose.Types.ObjectId();
     let fileName = req.body.fileName;
-    let fileData = "";
+    let fileData = "This is a new file";
     let timestamps = {
       createdAt: new Date(),
       updatedAt: new Date()
@@ -172,12 +172,8 @@ router.patch('/rename', [check("Authorization")], authenticateJWT,
           new: true
         }).exec()
       .then((result) => {
-        console.log(result);
         res.status(200).json({
           message: "Filename updated",
-          updated: {
-            result: result.files.filter(file => file.fileId.toString() === fileId.toString() )
-          },
         });
       })
       .catch((err) => {
@@ -202,7 +198,7 @@ router.get("/getFile", [check("Authorization")], authenticateJWT, (req, res) => 
 
   User.findOne({
     _id: id,
-    // "files.fileId": fileId,
+    "files.fileId": fileId,
   })
     .exec()
     .then((doc) => {

@@ -37,7 +37,9 @@ router.get('/download', [check("Authorization")], authenticateJWT, async (req, r
       });
     }
     let userId = req.user.userId;
+
     filePath=path.resolve(`${process.cwd()}/${userId}.pdf`);
+
     res.download(filePath, 'my-project.pdf', (err)=>{
       if(err){
         console.log(err);
@@ -45,9 +47,11 @@ router.get('/download', [check("Authorization")], authenticateJWT, async (req, r
           message: "requsted file not found"
         });
       }else{
+
         return res.status(200).json({
           message: "file served"
         });
+
       }
     });
 });
@@ -172,8 +176,10 @@ router.patch('/rename', [check("Authorization")], authenticateJWT,
           new: true
         }).exec()
       .then((result) => {
+        console.log(result);
         res.status(200).json({
           message: "Filename updated",
+
         });
       })
       .catch((err) => {

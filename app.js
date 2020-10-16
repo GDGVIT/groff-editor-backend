@@ -36,9 +36,9 @@ app.use(
 app.use(bp.json());
 app.use(cors());
 
-app.get("/ping",(_req,res)=>{
-	res.json({"Health":"Ok"})
-})
+app.get("/ping", (_req, res) => {
+	res.json({ Health: "Ok" });
+});
 
 // mongo db
 
@@ -46,7 +46,7 @@ mongoose.set("useCreateIndex", true);
 mongoose.connect(process.env.MONGO_URL, {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
-	useFindAndModify: false
+	useFindAndModify: false,
 });
 
 // listen port
@@ -68,33 +68,32 @@ io.on("connection", (person) => {
 	console.log(`made socket connection : ${person.id}`);
 
 	person.on("cmd", function (val) {
-        try{
-					let val_json = JSON.parse(val);
-					let token = val_json.token;
-					let user_id = val_json.user_id;
-					let fileName = val_json.fileName;
-					let data = val_json.data;
-					let email;
-        } catch(err) {
-        	console.log(err);
-        }
+		let val_json = JSON.parse(val);
+		let token = val_json.token;
+		let user_id = val_json.user_id;
+		let fileName = val_json.fileId;
+		let data = val_json.data;
+		let email;
 
-		
 		try {
 			email = jwt.verify(token, process.env.JWT_KEY);
 		} catch (err) {
 			console.log(err);
 		}
-		let timestamps={
-			updatedAt: new Date()
-		}
+		let timestamps = {
+			updatedAt: new Date(),
+		};
+		console.log(fileName)
 		User.updateOne(
 			{
 				_id: user_id,
-				"files.fileName": fileName
+				"files.fileId": fileName,
 			},
 			{
-				$set: { "files.$.fileData": data, "files.$.timestamps": timestamps },
+				$set: {
+					"files.$.fileData": data,
+					"files.$.timestamps": timestamps,
+				},
 			}
 		)
 			.exec()
@@ -108,7 +107,7 @@ io.on("connection", (person) => {
 		let command = 'printf "' + data + '"';
 
 		child = exec(
-			`${command} | groff -i -ms -T pdf > ${user_id}.pdf`,
+			`${command} | groff -i -ms -T pdf > "${user_id}.pdf"`,
 			(err, stdout, stderr) => {
 				fs.readFile(`${user_id}.pdf`, "binary", (err, data) => {
 					if (err) {

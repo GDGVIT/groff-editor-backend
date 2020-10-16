@@ -13,7 +13,7 @@ const btoa = require("btoa");
 const bash = require("bash");
 // const WebSocket = require("ws");
 
-const { exec } = require("child_process");
+const { exec, execFile } = require("child_process");
 const { check, validationResult } = require("express-validator");
 
 // var data = "";
@@ -36,9 +36,9 @@ app.use(
 app.use(bp.json());
 app.use(cors());
 
-app.get("/ping",(_req,res)=>{
-	res.json({"Health":"Ok"})
-})
+app.get("/ping", (_req, res) => {
+	res.json({ Health: "Ok" });
+});
 
 // mongo db
 
@@ -46,6 +46,7 @@ mongoose.set("useCreateIndex", true);
 mongoose.connect(process.env.MONGO_URL, {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
+	useFindAndModify: false,
 });
 
 // listen port
@@ -68,28 +69,31 @@ io.on("connection", (person) => {
 
 	person.on("cmd", function (val) {
 		let val_json = JSON.parse(val);
-
 		let token = val_json.token;
 		let user_id = val_json.user_id;
-		let fileName = val_json.fileName;
+		let fileName = val_json.fileId;
 		let data = val_json.data;
 		let email;
+
 		try {
 			email = jwt.verify(token, process.env.JWT_KEY);
 		} catch (err) {
 			console.log(err);
 		}
-		let timestamps={
-			updatedAt: new Date()
-		}
+		let timestamps = {
+			updatedAt: new Date(),
+		};
+		console.log(fileName)
 		User.updateOne(
 			{
 				_id: user_id,
-				"files.fileName": fileName,
-				timestamps: timestamps
+				"files.fileId": fileName,
 			},
 			{
-				$set: { "files.$.fileData": data },
+				$set: {
+					"files.$.fileData": data,
+					"files.$.timestamps": timestamps,
+				},
 			}
 		)
 			.exec()
@@ -103,7 +107,7 @@ io.on("connection", (person) => {
 		let command = 'printf "' + data + '"';
 
 		child = exec(
-			`${command} | groff -i -ms -T pdf > ${user_id}.pdf`,
+			`${command} | groff -i -ms -T pdf > "${user_id}.pdf"`,
 			(err, stdout, stderr) => {
 				fs.readFile(`${user_id}.pdf`, "binary", (err, data) => {
 					if (err) {
@@ -121,5 +125,13 @@ io.on("connection", (person) => {
 				}
 			}
 		);
+
+		// child = execFile('printf', [data, "|", "groff", "-i", "-ms", "-T", "pdf", ">", `${userId}.pdf`],  (error, stdout, stderr) => {
+		//   if (error) {
+		//     throw error;
+		//     console.log(error);
+		//   }
+		//   console.log(stdout);
+		// });
 	});
 });

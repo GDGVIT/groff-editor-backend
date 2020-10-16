@@ -37,17 +37,21 @@ router.get('/download', [check("Authorization")], authenticateJWT, async (req, r
       });
     }
     let userId = req.user.userId;
-    filePath=path.resolve(`./${userId}.pdf`);
+
+    filePath=path.resolve(`${process.cwd()}/${userId}.pdf`);
+
     res.download(filePath, 'my-project.pdf', (err)=>{
       if(err){
         console.log(err);
-        res.status(404).json({
+        return res.status(404).json({
           message: "requsted file not found"
         });
       }else{
-        // res.status(200).json({
-        //   message: "file served"
-        // });
+
+        return res.status(200).json({
+          message: "file served"
+        });
+
       }
     });
 });
@@ -101,7 +105,7 @@ router.patch(
     let id = req.user.userId;
     let fileId = new mongoose.Types.ObjectId();
     let fileName = req.body.fileName;
-    let fileData = "";
+    let fileData = "This is a new file";
     let timestamps = {
       createdAt: new Date(),
       updatedAt: new Date()
@@ -175,9 +179,7 @@ router.patch('/rename', [check("Authorization")], authenticateJWT,
         console.log(result);
         res.status(200).json({
           message: "Filename updated",
-          updated: {
-            result: result.files.filter(file => file.fileId.toString() === fileId.toString() )
-          },
+
         });
       })
       .catch((err) => {
@@ -202,13 +204,11 @@ router.get("/getFile", [check("Authorization")], authenticateJWT, (req, res) => 
 
   User.findOne({
     _id: id,
-    // "files.fileId": fileId,
+    "files.fileId": fileId,
   })
     .exec()
     .then((doc) => {
-      console.log(doc);
       if (doc) {
-		  console.log(doc)
         const newDoc = doc.files.filter(file => file.fileId.toString() === fileId.toString());
         res.status(200).json(newDoc);
       } else {

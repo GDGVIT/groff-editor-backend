@@ -1,9 +1,13 @@
 const mongoose = require("mongoose");
 
 const fileSchema = mongoose.Schema({
-    // fileId: mongoose.Schema.Types.ObjectId,
+    fileId: mongoose.Schema.Types.ObjectId,
     fileName: {type: String, required: true, default: "untitled" },
-    fileData: {type: String, default: ""}
+    fileData: {type: String, default: ""},
+    timestamps: {
+        createdAt: {type: Date, require: true, default: new Date()},
+        updatedAt: {type: Date, default: new Date()}
+    }
 });
 
 const userSchema = mongoose.Schema({
@@ -19,12 +23,7 @@ const userSchema = mongoose.Schema({
         min: 6,
         max: 30
     },
-    files: [fileSchema],
-    timestamps: {
-        createdAt: {type: Date, require: true, default: new Date(),
-        updatedAt: {type: Date, default: new Date()}
-        }
-    }
+    files: [fileSchema]
 });
 
 module.exports.User = mongoose.model('User', userSchema);

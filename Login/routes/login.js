@@ -95,14 +95,14 @@ router.post("/login", (req, res) => {
             userid: user[0]._id,
           });
         }
-        res.status(401).json({
+        return res.status(401).json({
           message: "Auth failed",
         });
       });
     })
     .catch((err) => {
       console.log(err);
-      res.status(500).json({
+      return res.status(500).json({
         error: err,
       });
     });
@@ -126,10 +126,5 @@ router.delete("/delete/:userId", (req, res) => {
       });
     });
 });
-
-// router.get('/logout', [check("Authorization"), check("fileName")], authenticateJWT, (req,res)=>{
-//   if()
-// });
-
 
 module.exports = router;

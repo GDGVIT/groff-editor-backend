@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const { check, validationResult } = require("express-validator");
-const { User } = require("../models/model.js");
+const { User, File } = require("../models/model.js");
 const mongoose = require("mongoose");
 
 const path = require('path');
@@ -37,17 +37,21 @@ router.get('/download', [check("Authorization")], authenticateJWT, async (req, r
       });
     }
     let userId = req.user.userId;
-    filePath=path.resolve(`./${userId}`);
+
+    filePath=path.resolve(`${process.cwd()}/${userId}.pdf`);
+
     res.download(filePath, 'my-project.pdf', (err)=>{
       if(err){
         console.log(err);
-        res.status(404).json({
+        return res.status(404).json({
           message: "requsted file not found"
         });
       }else{
-        res.status(200).json({
+
+        return res.status(200).json({
           message: "file served"
         });
+
       }
     });
 });
@@ -101,7 +105,7 @@ router.patch(
     let id = req.user.userId;
     let fileId = new mongoose.Types.ObjectId();
     let fileName = req.body.fileName;
-    let fileData = "";
+    let fileData = "This is a new file";
     let timestamps = {
       createdAt: new Date(),
       updatedAt: new Date()
@@ -114,7 +118,7 @@ router.patch(
       {
         $push: {
           files: {
-            _id: fileId,
+            fileId: fileId,
             fileName: fileName,
             fileData: fileData,
             timestamps: timestamps
@@ -127,7 +131,7 @@ router.patch(
         res.status(200).json({
           message: "File created",
           created: {
-            _id: fileId,
+            fileId: fileId,
             fileName: fileName,
             fileData: fileData,
             timestamps: timestamps
@@ -157,96 +161,69 @@ router.patch('/rename', [check("Authorization")], authenticateJWT,
     let newFileName = req.body.newFileName;
     let id = req.user.userId;
     let fileId=req.body.fileId;
-      
-    User.find({
-      _id: id, 
-      "files._id": fileId
-    }).exec().then((result)=>{
-      
-        let filter={
+
+    let filter={
           _id: id,
-          "files._id": fileId
-        };
+          "files.fileId": fileId
+    };
 
         let update={
           $set: {
             "files.$.fileName": newFileName
           }
         }
-
-       User.findOneAndUpdate(filter, update).exec()
+      User.findOneAndUpdate(filter, update, {
+          new: true
+        }).exec()
       .then((result) => {
+        console.log(result);
         res.status(200).json({
           message: "Filename updated",
-          created: {
-            result: result
-          },
+
         });
       })
       .catch((err) => {
         console.log(err);
       });
 
-
-    }).catch((err)=>{
-      console.log(err);
-    });
-
   }
 );
 
 // get one file for a user : 
 
-// const escapeRegex = function(text) {
-//     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-//   }
+router.get("/getFile", [check("Authorization")], authenticateJWT, (req, res) => {
+  const error = validationResult(req);
+  if (!error.isEmpty()) {
+    return res.status(422).json({
+      error: error.array(),
+    });
+  }
 
-// router.get("/searchFile", [check("Authorization")], authenticateJWT, (req, res) => {
-//   const error = validationResult(req);
-//   if (!error.isEmpty()) {
-//     return res.status(422).json({
-//       error: error.array(),
-//     });
-//   }
+  const fileId = req.query.fileId;
+  const id = req.user.userId;
 
-//   const token = req.header("Authorization");
-//   let email;
-//   try {
-//     email = jwt.verify(token, process.env.JWT_KEY);
-//   } catch (err) {
-//     console.log(err);
-//     return res.status(403).json({
-//       message: err,
-//     });
-//   }
-
-//   // const regex = new RegExp(escapeRegex(req.params.fileName), 'gi');
-
-//   const fileId = req.body.fileId;
-//   const id = req.body.userId;
-//   User.find({
-//     _id: id,
-//     "files.fileId": fileId,
-//   })
-//     .select("files")
-//     .exec()
-//     .then((doc) => {
-//       console.log(doc);
-//       if (doc) {
-//         res.status(200).json(doc);
-//       } else {
-//         res.status(404).json({
-//           message: "No data saved for this file name",
-//         });
-//       }
-//     })
-//     .catch((err) => {
-//       console.log(err);
-//       res.status(500).json({
-//         err: err,
-//       });
-//     });
-// });
+  User.findOne({
+    _id: id,
+    "files.fileId": fileId,
+  })
+    .exec()
+    .then((doc) => {
+      if (doc) {
+        const newDoc = doc.files.filter(file => file.fileId.toString() === fileId.toString());
+        res.status(200).json(newDoc);
+      } else {
+        res.status(404).json({
+          message: "No data saved for this file name",
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({
+        err: err,
+      });
+    });
+});
 
 
 // delete a file
@@ -267,7 +244,7 @@ router.delete("/deleteFile", [check("Authorization"), check("fileName")], authen
     {
       "$pull": {
         "files":{
-          "_id": fileId
+          "fileId": fileId
         }
       },
     }

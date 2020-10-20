@@ -11,8 +11,8 @@ const output = document.getElementById("render");
 btn.addEventListener("click", function(){
     var val = {
         token: process.env.TEST_TOKEN, 
-        user_id: "5f474666872d6a141f53da20", //dummy id
-        fileName: "sampletext.txt", // dummy filename
+        user_id: "5f474666872d6a141f53da20", 
+        fileName: "sampletext.txt", 
         data: command.value 
     }
     socket.emit("cmd", JSON.stringify(val));

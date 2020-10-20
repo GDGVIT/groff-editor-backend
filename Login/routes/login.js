@@ -19,29 +19,6 @@ router.post("/signup", (req, res) => {
           message: "mail exists",
         });
       } else {
-        // bcrypt.hash(
-        //   req.body.password,
-        //   parseInt(process.env.NUM_HASH),
-        //   (err, hash) => {
-        //     if (err) {
-        //       return res.status(500).json({
-        //         error: err,
-        //       });
-        //     } else {
-        //       const user = new User({
-        //         _id: new mongoose.Types.ObjectId(),
-        //         email: req.body.email,
-        //         password: hash,
-        //       });
-        //       user.save().then((result) => {
-        //         res.status(201).json({
-        //           message: "User created",
-        //           userid: user._id,
-        //         });
-        //       });
-        //     }
-        //   }
-        // );
         bcrypt.genSalt(parseInt(process.env.NUM_HASH), function(err, salt) {
           bcrypt.hash(req.body.password, salt, function(err, hash) {
               if (err) {

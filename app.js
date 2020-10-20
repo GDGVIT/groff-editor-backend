@@ -61,19 +61,24 @@ app.use("/api/manauth", loginRoute);
 app.use("/api/preview", previewRoute);
 
 let child;
-var io = socket(server,{path: '/api/socket.io'});
+var io = socket(server);
 io.origins("*:*");
 io.on("connection", (person) => {
 	console.log(`made socket connection : ${person.id}`);
 
 	person.on("cmd", function (val) {
-		let val_json = JSON.parse(val);
+		try{
+				let val_json = JSON.parse(val);
+				console.log(val);
+				let token = val_json.token;
+				let user_id = val_json.user_id;
+				let fileName = val_json.fileName;
+				let data = val_json.data;
+				let email;
+			} catch (err) {
+				console.log(err);
+			}
 
-		let token = val_json.token;
-		let user_id = val_json.user_id;
-		let fileName = val_json.fileName;
-		let data = val_json.data;
-		let email;
 		try {
 			email = jwt.verify(token, process.env.JWT_KEY);
 		} catch (err) {
@@ -86,7 +91,6 @@ io.on("connection", (person) => {
 			{
 				_id: user_id,
 				"files.fileName": fileName,
-				timestamps: timestamps
 			},
 			{
 				$set: { "files.$.fileData": data },

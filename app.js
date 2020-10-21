@@ -11,6 +11,7 @@ const socket = require("socket.io");
 const fs = require("fs");
 const btoa = require("btoa");
 const bash = require("bash");
+const stream = require("stream");
 // const WebSocket = require("ws");
 
 const { exec, execFile } = require("child_process");
@@ -62,7 +63,7 @@ app.use("/api/manauth", loginRoute);
 app.use("/api/preview", previewRoute);
 
 let child;
-var io = socket(server,{path: '/api/socket.io'});
+var io = socket(server, { path: "/api/socket.io" });
 io.origins("*:*");
 io.on("connection", (person) => {
 	console.log(`made socket connection : ${person.id}`);
@@ -83,7 +84,7 @@ io.on("connection", (person) => {
 		let timestamps = {
 			updatedAt: new Date(),
 		};
-		console.log(fileName)
+		console.log(fileName);
 		User.updateOne(
 			{
 				_id: user_id,
@@ -106,25 +107,55 @@ io.on("connection", (person) => {
 
 		let command = 'printf "' + data + '"';
 
-		child = exec(
-			`${command} | groff -i -ms -T pdf > "${user_id}.pdf"`,
-			(err, stdout, stderr) => {
-				fs.readFile(`${user_id}.pdf`, "binary", (err, data) => {
-					if (err) {
-						return console.log("Error:" + err);
-					}
-					let buff = btoa(data);
-					person.emit("cmd", buff);
-					// console.log(buff);
-				});
+		if (!user_id) {
+			user_id = "testing";
+		}
+
+		child = execFile(
+			"pdfroff",
+			["-i", "-ms", `--pdf-output=${user_id}.pdf`],
+			(err, stdout) => {
 				if (err) {
-					console.log(`Error: ${err.message}`);
-				}
-				if (stderr) {
-					console.log(`Error: ${stderr}`);
+					console.log(err);
+				} else {
+					fs.readFile(`${user_id}.pdf`, "binary", (err, data) => {
+						if (err) {
+							return console.log("Error:" + err);
+						}
+						let buff = btoa(data);
+						person.emit("cmd", buff);
+						// console.log(buff);
+					});
 				}
 			}
 		);
+
+		var stdinStream = new stream.Readable();
+		stdinStream.push(data);
+		stdinStream.push(null);
+		stdinStream.pipe(child.stdin);
+
+		child.on("data", (data) => {});
+
+		// child = exec(
+		// 	`${command} | groff -i -ms -T pdf > "${user_id}.pdf"`,
+		// 	(err, stdout, stderr) => {
+		// 		fs.readFile(`${user_id}.pdf`, "binary", (err, data) => {
+		// 			if (err) {
+		// 				return console.log("Error:" + err);
+		// 			}
+		// 			let buff = btoa(data);
+		// 			person.emit("cmd", buff);
+		// 			// console.log(buff);
+		// 		});
+		// 		if (err) {
+		// 			console.log(`Error: ${err.message}`);
+		// 		}
+		// 		if (stderr) {
+		// 			console.log(`Error: ${stderr}`);
+		// 		}
+		// 	}
+		// );
 
 		// child = execFile('printf', [data, "|", "groff", "-i", "-ms", "-T", "pdf", ">", `${userId}.pdf`],  (error, stdout, stderr) => {
 		//   if (error) {

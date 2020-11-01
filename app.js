@@ -8,12 +8,14 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const morgan = require("morgan");
 const socket = require("socket.io");
+// const ss = require("socket.io-stream");
+const stream = require("stream");
 const fs = require("fs");
 const btoa = require("btoa");
 const bash = require("bash");
 // const WebSocket = require("ws");
 
-const { exec, execFile } = require("child_process");
+const { exec, execFile, spawn } = require("child_process");
 const { check, validationResult } = require("express-validator");
 
 // var data = "";
@@ -62,7 +64,7 @@ app.use("/api/manauth", loginRoute);
 app.use("/api/preview", previewRoute);
 
 let child;
-var io = socket(server);
+var io = socket(server, {path: '/api/socket.io'});
 io.origins("*:*");
 io.on("connection", (person) => {
 	console.log(`made socket connection : ${person.id}`);
@@ -71,20 +73,27 @@ io.on("connection", (person) => {
 
 		let val_json = JSON.parse(val);
 		let token = val_json.token;
-		let user_id = val_json.user_id;
 		let fileName = val_json.fileId;
 		let data = val_json.data;
-		let email;
 
 		try {
-			email = jwt.verify(token, process.env.JWT_KEY);
+				jwt.verify(token, process.env.JWT_KEY, (err, user) => {
+	      if (err) {
+	        return res.sendStatus(403);
+	      }
+	      let user_id = user[0]._id;
+	      let email = user[0].email;
+	      next();
+	    });
 		} catch (err) {
 			console.log(err);
 		}
+
 		let timestamps = {
 			updatedAt: new Date(),
 		};
-		console.log(fileName)
+		
+		console.log(fileName);
 		User.updateOne(
 			{
 				_id: user_id,
@@ -107,32 +116,28 @@ io.on("connection", (person) => {
 
 		let command = 'printf "' + data + '"';
 
-		child = exec(
-			`${command} | groff -i -ms -T pdf > "${user_id}.pdf"`,
-			(err, stdout, stderr) => {
-				fs.readFile(`${user_id}.pdf`, "binary", (err, data) => {
-					if (err) {
-						return console.log("Error:" + err);
-					}
-					let buff = btoa(data);
-					person.emit("cmd", buff);
-					// console.log(buff);
-				});
-				if (err) {
-					console.log(`Error: ${err.message}`);
-				}
-				if (stderr) {
-					console.log(`Error: ${stderr}`);
-				}
-			}
-		);
+		child = execFile(
+            "pdfroff",
+            ["-i", "-ms", `--pdf-output=${user_id}.pdf`],
+            (err) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    fs.readFile(`${user_id}.pdf`, "binary", (err, data) => {
+                        if (err) {
+                            return console.log("Error:" + err);
+                        }
+                        let buff = btoa(data);
+                        person.emit("cmd", buff);
+                        // console.log(buff);
+                    });
+                }
+            }
+        );
 
-		// child = execFile('printf', [data, "|", "groff", "-i", "-ms", "-T", "pdf", ">", `${userId}.pdf`],  (error, stdout, stderr) => {
-		//   if (error) {
-		//     throw error;
-		//     console.log(error);
-		//   }
-		//   console.log(stdout);
-		// });
+        var stdinStream = new stream.Readable();
+        stdinStream.push(data);
+        stdinStream.push(null);
+        stdinStream.pipe(child.stdin);
 	});
 });

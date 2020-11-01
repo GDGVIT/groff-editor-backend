@@ -7,7 +7,7 @@ const mongoose = require("mongoose");
 
 const path = require('path');
 const mime = require('file-type');
-const stream = require('stream');
+// const stream = require('stream');
 const fs = require("fs");
 let filePath;
 
@@ -26,6 +26,44 @@ const authenticateJWT = (req, res, next) => {
         res.sendStatus(401);
     }
 };
+
+
+const authRoute = (req, res, next) => {
+    const authHeader = req.header("Authorization");
+    if (authHeader) {
+        const token = authHeader;
+        jwt.verify(token, process.env.JWT_KEY, (err, user) => {
+            if (err) {
+                return res.sendStatus(403);
+            }
+            req.user = user;
+            console.log(req.user);
+            const token = jwt.sign(
+              {
+                email: user[0].email,
+                userId: user[0]._id,
+              },
+            process.env.JWT_KEY,
+              {
+                expiresIn: "60d",
+              }
+            );
+            req.user.token = token;
+            next();
+        });
+    } else {
+        res.sendStatus(401);
+    }
+};
+
+router.get("/checkJwt", authRoute,(req, res) => {
+  console.log(req.user);
+  return res.status(200).json({
+    "email": req.user.email,
+    "_id": req.user.userId,
+    "token": req.user.token
+  });
+});
 
 // to download files
 

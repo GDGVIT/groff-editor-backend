@@ -13,6 +13,7 @@ const stream = require("stream");
 const fs = require("fs");
 const btoa = require("btoa");
 const bash = require("bash");
+const stream = require("stream");
 // const WebSocket = require("ws");
 
 const { exec, execFile, spawn } = require("child_process");
@@ -64,7 +65,9 @@ app.use("/api/manauth", loginRoute);
 app.use("/api/preview", previewRoute);
 
 let child;
+
 var io = socket(server, {path: '/api/socket.io'});
+
 io.origins("*:*");
 io.on("connection", (person) => {
 	console.log(`made socket connection : ${person.id}`);
@@ -92,7 +95,7 @@ io.on("connection", (person) => {
 		let timestamps = {
 			updatedAt: new Date(),
 		};
-		
+
 		console.log(fileName);
 		User.updateOne(
 			{
@@ -139,5 +142,6 @@ io.on("connection", (person) => {
         stdinStream.push(data);
         stdinStream.push(null);
         stdinStream.pipe(child.stdin);
+
 	});
 });

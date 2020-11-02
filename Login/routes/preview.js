@@ -143,7 +143,12 @@ router.patch(
     let id = req.user.userId;
     let fileId = new mongoose.Types.ObjectId();
     let fileName = req.body.fileName;
-    let fileData = "This is a new file";
+    let fileData;
+    if(req.body.fileData != ""){
+       fileData = req.body.fileData
+    } else {
+       fileData = "This is a new file"
+    }
     let timestamps = {
       createdAt: new Date(),
       updatedAt: new Date()

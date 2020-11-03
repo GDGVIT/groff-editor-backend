@@ -60,7 +60,6 @@ router.get("/checkJwt", authRoute,(req, res) => {
   console.log(req.user);
   return res.status(200).json({
     "email": req.user.email,
-    "_id": req.user.userId,
     "token": req.user.token
   });
 });
@@ -75,6 +74,8 @@ router.get('/download', [check("Authorization")], authenticateJWT, async (req, r
       });
     }
     let userId = req.user.userId;
+
+    // User.find()
 
     filePath=path.resolve(`${process.cwd()}/${userId}.pdf`);
 

@@ -13,7 +13,7 @@ const stream = require("stream");
 const fs = require("fs");
 const btoa = require("btoa");
 const bash = require("bash");
-const stream = require("stream");
+
 // const WebSocket = require("ws");
 
 const { exec, execFile, spawn } = require("child_process");
@@ -80,68 +80,85 @@ io.on("connection", (person) => {
 		let data = val_json.data;
 
 		try {
-				jwt.verify(token, process.env.JWT_KEY, (err, user) => {
-	      if (err) {
+			jwt.verify(token, process.env.JWT_KEY, (err, user) => {
+	  	if (err) {
 	        return res.sendStatus(403);
-	      }
-	      let user_id = user[0]._id;
-	      let email = user[0].email;
-	      next();
+	    }
+	      	let user_id = user[0]._id;
+	 	    let email = user[0].email;
 	    });
 		} catch (err) {
 			console.log(err);
 		}
 
-		let timestamps = {
-			updatedAt: new Date(),
-		};
+			User.find({
+				email: email
+			}).then((doc) => {
+				if(doc.length>=1){
+					let timestamps = {
+						updatedAt: new Date(),
+					};
 
-		console.log(fileName);
-		User.updateOne(
-			{
-				_id: user_id,
-				"files.fileId": fileName,
-			},
-			{
-				$set: {
-					"files.$.fileData": data,
-					"files.$.timestamps": timestamps,
-				},
-			}
-		)
-			.exec()
-			.then((result) => {
-				console.log("File updated");
-			})
-			.catch((err) => {
-				console.log(err);
+					console.log(fileName);
+					User.updateOne(
+						{
+							_id: user_id,
+							"files.fileId": fileName,
+						},
+						{
+							$set: {
+								"files.$.fileData": data,
+								"files.$.timestamps": timestamps,
+							},
+						}
+					)
+						.exec()
+						.then((result) => {
+							console.log("File updated");
+						})
+						.catch((err) => {
+							console.log(err);
+						});
+
+					let command = 'printf "' + data + '"';
+
+					child = execFile(
+			            "pdfroff",
+			            ["-i", "-ms", `--pdf-output=${user_id}.pdf`],
+			            (err) => {
+			                if (err) {
+			                    console.log(err);
+			                } else {
+			                    fs.readFile(`${user_id}.pdf`, "binary", (err, data) => {
+			                        if (err) {
+			                            return console.log("Error:" + err);
+			                        }
+			                        let buff = btoa(data);
+			                        person.emit("cmd", buff);
+			                    });
+			                }
+			            }
+			        );
+
+			        var stdinStream = new stream.Readable();
+			        stdinStream.push(data);
+			        stdinStream.push(null);
+			        stdinStream.pipe(child.stdin);
+
+				} else {
+					return res.status(400).json({
+						message: "user not found"
+					});
+				}		
+			}).catch(err => {
+				return res.status(400).json({
+					message: "user not found"
+				});
+			});	
+		}).catch(err => {
+			return res.status(400).json({
+				message: "couldn't find the mail",
+				error: err
 			});
-
-		let command = 'printf "' + data + '"';
-
-		child = execFile(
-            "pdfroff",
-            ["-i", "-ms", `--pdf-output=${user_id}.pdf`],
-            (err) => {
-                if (err) {
-                    console.log(err);
-                } else {
-                    fs.readFile(`${user_id}.pdf`, "binary", (err, data) => {
-                        if (err) {
-                            return console.log("Error:" + err);
-                        }
-                        let buff = btoa(data);
-                        person.emit("cmd", buff);
-                        // console.log(buff);
-                    });
-                }
-            }
-        );
-
-        var stdinStream = new stream.Readable();
-        stdinStream.push(data);
-        stdinStream.push(null);
-        stdinStream.pipe(child.stdin);
-
-	});
+		});		
 });

@@ -8,6 +8,7 @@ const { User } = require("../models/model.js");
 
 router.post("/signup", (req, res) => {
   let mail = req.body.email;
+  let pass = req.body.password;
   console.log(mail);
   User.find({
     email: req.body.email,
@@ -18,7 +19,11 @@ router.post("/signup", (req, res) => {
         return res.status(409).json({
           message: "mail exists",
         });
-      } else {
+      } else if (pass.length < 7){
+        return res.status(422).json({
+          message: "length of password should be greater than 6 letters"
+        });
+      }else {
         bcrypt.genSalt(parseInt(process.env.NUM_HASH), function(err, salt) {
           bcrypt.hash(req.body.password, salt, function(err, hash) {
               if (err) {
@@ -108,23 +113,8 @@ router.post("/login", (req, res) => {
     });
 });
 
-router.delete("/delete/:userId", (req, res) => {
-  User.remove({
-    _id: req.params.userId,
-  })
-    .exec()
-    .then((result) => {
-      res.status(200).json({
-        message: "User deleted",
-        userid: user._id,
-      });
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json({
-        error: err,
-      });
-    });
+router.post("/guest", (req, res)=>{
+
 });
 
 module.exports = router;

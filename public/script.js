@@ -1,4 +1,4 @@
-var socket = io.connect('http://52.237.109.213:3000');
+var socket = io.connect(process.env.IP_ADDR);
 
 // Query DOM
 

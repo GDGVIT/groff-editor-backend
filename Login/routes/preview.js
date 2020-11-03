@@ -73,11 +73,11 @@ router.get('/download', [check("Authorization")], authenticateJWT, async (req, r
         error: error.array(),
       });
     }
-    let userId = req.user.userId;
+    let userId = req.user._id;
 
     // User.find()
 
-    filePath=path.resolve(`${process.cwd()}/${userId}.pdf`);
+    filePath=path.resolve(`${process.cwd()}/media/${userId}.pdf`);
 
     res.download(filePath, 'my-project.pdf', (err)=>{
       if(err){
@@ -85,12 +85,6 @@ router.get('/download', [check("Authorization")], authenticateJWT, async (req, r
         return res.status(404).json({
           message: "requsted file not found"
         });
-      }else{
-
-        return res.status(200).json({
-          message: "file served"
-        });
-
       }
     });
 });
@@ -144,7 +138,11 @@ router.patch(
     let id = req.user.userId;
     let fileId = new mongoose.Types.ObjectId();
     let fileName = req.body.fileName;
-    let fileData = "This is a new file";
+    if(req.body.fileData != ""){
+       fileData = req.body.fileData
+    } else {
+       fileData = "This is a new file"
+    }
     let timestamps = {
       createdAt: new Date(),
       updatedAt: new Date()

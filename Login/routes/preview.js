@@ -138,6 +138,7 @@ router.patch(
     let id = req.user.userId;
     let fileId = new mongoose.Types.ObjectId();
     let fileName = req.body.fileName;
+    let fileData;
     if(req.body.fileData != ""){
        fileData = req.body.fileData
     } else {

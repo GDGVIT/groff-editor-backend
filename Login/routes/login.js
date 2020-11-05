@@ -113,8 +113,16 @@ router.post("/login", (req, res) => {
     });
 });
 
-router.post("/guest", (req, res)=>{
+// router.post("/guest", (req, res)=>{
+//   let id = new mongoose.Types.ObjectId(); 
+//   const user = new User({
+//       _id: id,
+//       email: id+"@mail.com",
+//       password: id+"pass"
+//   });
 
-});
+//   user.save().then().catch();
+
+// });
 
 module.exports = router;

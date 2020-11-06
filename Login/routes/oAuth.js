@@ -3,7 +3,7 @@ const router = express.Router();
 const axios = require("axios");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
-const User = require("../models/model.js");
+const {User} = require("../models/model.js");
 const jwt = require("jsonwebtoken");
 dotenv.config();
 
@@ -50,7 +50,7 @@ router.get("/google", async (req, res) => {
       token1 = jwt.sign(
         {
           email: user[0].email,
-          userId: user[0]._id,
+          userId: user[0].id,
         },
         process.env.JWT_KEY,
         {

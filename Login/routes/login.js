@@ -8,12 +8,18 @@ const { User } = require("../models/model.js");
 
 router.post("/signup", (req, res) => {
   let mail = req.body.email;
+  let pass = req.body.password;
   console.log(mail);
   User.find({
     email: req.body.email,
   })
     .exec()
     .then((useri) => {
+      if(pass.length < 7){
+        return res.status(422).json({
+          message: "length of password should be greater than 6 letters"
+        });
+      }
       if (useri.length >= 1) {
         return res.status(409).json({
           message: "mail exists",
@@ -103,25 +109,6 @@ router.post("/login", (req, res) => {
     .catch((err) => {
       console.log(err);
       return res.status(500).json({
-        error: err,
-      });
-    });
-});
-
-router.delete("/delete/:userId", (req, res) => {
-  User.remove({
-    _id: req.params.userId,
-  })
-    .exec()
-    .then((result) => {
-      res.status(200).json({
-        message: "User deleted",
-        userid: user._id,
-      });
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json({
         error: err,
       });
     });

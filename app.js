@@ -23,7 +23,7 @@ const { check, validationResult } = require("express-validator");
 const loginRoute = require("./Login/routes/login");
 const oAuthRoute = require("./Login/routes/oAuth");
 const previewRoute = require("./Login/routes/preview");
-const patch1Route = require('./patch3');
+const authTestRoute = require('./Login/routes/authTest');
 const { User } = require("./Login/models/model");
 
 const port = process.env.BACKEND_PORT || 3000;
@@ -72,7 +72,7 @@ const server = app.listen(port, function () {
 app.use("/api/auth", oAuthRoute);
 app.use("/api/manauth", loginRoute);
 app.use("/api/preview", previewRoute);
-app.use("/",patch1Route);
+app.use("/",authTestRoute);
 
 let child;
 

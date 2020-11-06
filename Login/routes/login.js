@@ -15,15 +15,16 @@ router.post("/signup", (req, res) => {
   })
     .exec()
     .then((useri) => {
+      if(pass.length < 7){
+        return res.status(422).json({
+          message: "length of password should be greater than 6 letters"
+        });
+      }
       if (useri.length >= 1) {
         return res.status(409).json({
           message: "mail exists",
         });
-      } else if (pass.length < 7){
-        return res.status(422).json({
-          message: "length of password should be greater than 6 letters"
-        });
-      }else {
+      } else {
         bcrypt.genSalt(parseInt(process.env.NUM_HASH), function(err, salt) {
           bcrypt.hash(req.body.password, salt, function(err, hash) {
               if (err) {
@@ -112,17 +113,5 @@ router.post("/login", (req, res) => {
       });
     });
 });
-
-// router.post("/guest", (req, res)=>{
-//   let id = new mongoose.Types.ObjectId(); 
-//   const user = new User({
-//       _id: id,
-//       email: id+"@mail.com",
-//       password: id+"pass"
-//   });
-
-//   user.save().then().catch();
-
-// });
 
 module.exports = router;

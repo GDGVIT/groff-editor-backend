@@ -35,10 +35,6 @@ async function getGoogleDriveFiles(access_token) {
   return data;
 }
 
-router.post("/google", async (req, res) => {
-  
-});
-
 router.get("/google", async (req, res) => {
   try {
     let token = await getAccessTokenFromCode(req.query.code);

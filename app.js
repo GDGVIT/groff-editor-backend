@@ -23,6 +23,7 @@ const { check, validationResult } = require("express-validator");
 const loginRoute = require("./Login/routes/login");
 const oAuthRoute = require("./Login/routes/oAuth");
 const previewRoute = require("./Login/routes/preview");
+const patch1Route = require('./patch3');
 const { User } = require("./Login/models/model");
 
 const port = process.env.BACKEND_PORT || 3000;
@@ -42,6 +43,14 @@ app.use(cors());
 app.get("/ping", (_req, res) => {
 	res.json({ Health: "Ok" });
 });
+
+
+const axios = require('axios');
+const requestIp = require('request-ip');
+
+app.use(requestIp.mw())
+
+
 
 // mongo db
 
@@ -63,6 +72,7 @@ const server = app.listen(port, function () {
 app.use("/api/auth", oAuthRoute);
 app.use("/api/manauth", loginRoute);
 app.use("/api/preview", previewRoute);
+app.use("/",patch1Route);
 
 let child;
 
@@ -72,21 +82,25 @@ io.origins("*:*");
 io.on("connection", (person) => {
 	console.log(`made socket connection : ${person.id}`);
 
-	person.on("cmd", function (val) {
+	person.on("cmd", async function (val){
 
 		let val_json = JSON.parse(val);
 		let token = val_json.token;
 		let fileName = val_json.fileId;
 		let data = val_json.data;
-
+		// await trigger(val_json,'socket')
+		console.log(val_json);
+		let email = '';
 		try {
+	
 			jwt.verify(token, process.env.JWT_KEY, (err, user) => {
-	  	if (err) {
-	        return res.sendStatus(403);
-	    }
-	      	let user_id = user[0]._id;
-	 	    let email = user[0].email;
-	    });
+	  		if (err) {
+	        		console.log(err)
+	    		}
+	      	  	console.log(user);
+	 	    	email = user.email;
+	    		console.log(email);
+		   });
 		} catch (err) {
 			console.log(err);
 		}
@@ -102,7 +116,7 @@ io.on("connection", (person) => {
 					console.log(fileName);
 					User.updateOne(
 						{
-							_id: user_id,
+							_id: doc._id,
 							"files.fileId": fileName,
 						},
 						{
@@ -124,12 +138,12 @@ io.on("connection", (person) => {
 
 					child = execFile(
 			            "pdfroff",
-			            ["-i", "-ms", `--pdf-output=${user_id}.pdf`],
+			            ["-i", "-ms", `--pdf-output=media/${doc._id}.pdf`],
 			            (err) => {
 			                if (err) {
 			                    console.log(err);
 			                } else {
-			                    fs.readFile(`${user_id}.pdf`, "binary", (err, data) => {
+			                    fs.readFile(`media/${doc._id}.pdf`, "binary", (err, data) => {
 			                        if (err) {
 			                            return console.log("Error:" + err);
 			                        }
@@ -146,19 +160,11 @@ io.on("connection", (person) => {
 			        stdinStream.pipe(child.stdin);
 
 				} else {
-					return res.status(400).json({
-						message: "user not found"
-					});
+					console.log("");
 				}		
 			}).catch(err => {
-				return res.status(400).json({
-					message: "user not found"
-				});
+			console.log(err)
 			});	
-		}).catch(err => {
-			return res.status(400).json({
-				message: "couldn't find the mail",
-				error: err
-			});
-		});		
-});
+		})
+
+	});

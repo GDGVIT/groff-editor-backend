@@ -1,0 +1,13 @@
+version: '3.7'
+services:
+  api:
+    container_name: backend
+    build: .
+    env_file: .env
+    ports:
+      - 3000:3000
+    volumes:
+      - static_volume:/media/
+
+volumes:
+  static_volume:

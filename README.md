@@ -12,28 +12,33 @@
 
 
 ## Functionalities
-- [ ]  Live preview
-- [ ]  Save as PDF option
+- [X]  Live preview
+- [X]  Save as PDF option
+- [X]  Have a list of files created previously by the user
+- [X]  Authorize and authenticate the user
 
+## Todo
+
+- [ ]  Add oAuth functionality
 
 <br>
 
 
 ## Instructions to run
 
-* Pre-requisites:
-	-  < insert pre-requisite >
-	-  < insert pre-requisite >
+### directions to install  
 
-* < directions to install > 
+- Clone the repo
+- Run the following command to set up
 ```bash
-< insert code >
+npm install
 ```
+- Add a .env file with contents as present in the sample .env
 
-* < directions to execute >
+### directions to execute 
 
 ```bash
-< insert code >
+npm start
 ```
 
 ## Contributors
@@ -42,7 +47,6 @@
 <tr align="center">
 
 <td>
-
 Pragati
 <p align="center">
 <img src = "https://dscvit.com/images/dsc-logo-square.svg" width="150" height="150" alt="Your Name Here (Insert Your Image Link In Src">
@@ -57,9 +61,7 @@ Pragati
 
 
 <td>
-
 Ananya Ganesh
-
 <p align="center">
 <img src = "https://dscvit.com/images/dsc-logo-square.svg" width="150" height="150" alt="Your Name Here (Insert Your Image Link In Src">
 </p>
@@ -70,6 +72,60 @@ Ananya Ganesh
 </a>
 </p>
 </td>
+
+
+<td>
+Kush Choudhary
+<p align="center">
+<img src = "https://dscvit.com/images/dsc-logo-square.svg" width="150" height="150" alt="Your Name Here (Insert Your Image Link In Src">
+</p>
+<p align="center">
+<a href = "https://github.com/1UC1F3R616"><img src = "http://www.iconninja.com/files/241/825/211/round-collaboration-social-github-code-circle-network-icon.svg" width="36" height = "36"/></a>
+<!-- <a href = "https://www.linkedin.com/in/ananya-ganesh"> -->
+<img src = "http://www.iconninja.com/files/863/607/751/network-linkedin-social-connection-circular-circle-media-icon.svg" width="36" height="36"/>
+</a>
+</p>
+</td>
+
+<td>
+Aditya
+<p align="center">
+<img src = "https://dscvit.com/images/dsc-logo-square.svg" width="150" height="150" alt="Your Name Here (Insert Your Image Link In Src">
+</p>
+<p align="center">
+<a href = "https://github.com/adictya"><img src = "http://www.iconninja.com/files/241/825/211/round-collaboration-social-github-code-circle-network-icon.svg" width="36" height = "36"/></a>
+<!-- <a href = "https://www.linkedin.com/in/ananya-ganesh"> -->
+<img src = "http://www.iconninja.com/files/863/607/751/network-linkedin-social-connection-circular-circle-media-icon.svg" width="36" height="36"/>
+</a>
+</p>
+</td>
+
+<td>
+Sai Sandeep Rayanuthala
+<p align="center">
+<img src = "https://dscvit.com/images/dsc-logo-square.svg" width="150" height="150" alt="Your Name Here (Insert Your Image Link In Src">
+</p>
+<p align="center">
+<a href = "https://github.com/raysandeep"><img src = "http://www.iconninja.com/files/241/825/211/round-collaboration-social-github-code-circle-network-icon.svg" width="36" height = "36"/></a>
+<!-- <a href = "https://www.linkedin.com/in/ananya-ganesh"> -->
+<img src = "http://www.iconninja.com/files/863/607/751/network-linkedin-social-connection-circular-circle-media-icon.svg" width="36" height="36"/>
+</a>
+</p>
+</td>
+
+<td>
+Md Hishaam Akhtar
+<p align="center">
+<img src = "https://dscvit.com/images/dsc-logo-square.svg" width="150" height="150" alt="Your Name Here (Insert Your Image Link In Src">
+</p>
+<p align="center">
+<a href = "https://github.com/mdhishaamakhtar"><img src = "http://www.iconninja.com/files/241/825/211/round-collaboration-social-github-code-circle-network-icon.svg" width="36" height = "36"/></a>
+<!-- <a href = "https://www.linkedin.com/in/ananya-ganesh"> -->
+<img src = "http://www.iconninja.com/files/863/607/751/network-linkedin-social-connection-circular-circle-media-icon.svg" width="36" height="36"/>
+</a>
+</p>
+</td>
+
 </tr>
   </table>
 

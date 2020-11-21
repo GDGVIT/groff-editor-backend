@@ -12,10 +12,10 @@
 
 
 ## Functionalities
-- [ ]  Live preview
-- [ ]  Save as PDF option
-- [ ]  Have a list of files created previously by the user
-- [ ]  Authorize and authenticate the user
+- [.]  Live preview
+- [.]  Save as PDF option
+- [.]  Have a list of files created previously by the user
+- [.]  Authorize and authenticate the user
 
 ## Todo
 

@@ -26,7 +26,7 @@
 
 ## Instructions to run
 
-* < directions to install > 
+### directions to install  
 
 - Clone the repo
 - Run the following command to set up
@@ -35,7 +35,7 @@ npm install
 ```
 - Add a .env file with contents as present in the sample .env
 
-* < directions to execute >
+### directions to execute 
 
 ```bash
 npm start

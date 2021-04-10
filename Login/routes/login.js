@@ -80,9 +80,9 @@ router.post("/login", async(req, res) => {
         })
 
         let recaptchaResponseJSON = await recaptchaResponse.json()
-        // if (!recaptchaResponseJSON.success) {
-        //     return res.status(403).send({code: 403, message: "recaptcha invalid"})
-        // }
+        if (!recaptchaResponseJSON.success) {
+            return res.status(403).send({code: 403, message: "recaptcha invalid"})
+        }
         let authStatus = await bcrypt.compare(password, user.password);
         if(!authStatus) {
             return res.status(403).send({code: 403, message: "auth failed"})

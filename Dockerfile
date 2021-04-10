@@ -10,8 +10,9 @@ RUN npm install
 
 RUN apt update && apt upgrade -y && apt install -y groff
 
-RUN chmod +x safe.sh
 COPY . /app
+RUN chmod +x /app/safe.sh
+
 
 EXPOSE 3000
 

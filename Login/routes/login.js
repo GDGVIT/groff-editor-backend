@@ -2,128 +2,110 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const express = require("express");
 const router = express.Router();
-
+const { validateEmail , validatePassword } = require('../utils/validation')
 const mongoose = require("mongoose");
 const { User } = require("../models/model.js");
+const fetch = require('node-fetch')
 
-router.post("/signup", (req, res) => {
-  let mail = req.body.email;
-  let pass = req.body.password;
-  console.log(mail);
-  User.find({
-    email: req.body.email,
-  })
-    .exec()
-    .then((useri) => {
-      if(pass.length < 7){
-        return res.status(422).json({
-          message: "length of password should be greater than 6 letters"
-        });
+router.post("/signup", async (req, res) => {
+  let { email, password,  token } = req.body;
+
+  try {
+      if (!validateEmail(email) || !validatePassword(password) || !token) {
+          res.status(400).send({code: 400, message: "invalid email address or password"});
+          return
       }
-      if (useri.length >= 1) {
-        return res.status(409).json({
-          message: "mail exists",
-        });
-      } else {
+      let user = await User.find({ email })
+      if (user.length > 0) {
+          return res.status(409).json({
+              message: "mail exists",
+          })
+          return
+      }
+      const secret_key = process.env.SECRET_KEY;
+      const url = `https://www.google.com/recaptcha/api/siteverify?secret=${secret_key}&response=${token}`;
+      let recaptchaResponse = await fetch(url, {
+          method: 'post'
+      })
 
-        const secret_key = process.env.SECRET_KEY;
-        const token1 = req.body.token;
-        const url = `https://www.google.com/recaptcha/api/siteverify?secret=${secret_key}&response=${token1}`;
+      let recaptchaResponseJSON = await recaptchaResponse.json()
 
-        fetch(url, {
-            method: 'post'
-        })
-            .then(response => response.json())
-            .then(google_response => res.json({ google_response }))
-            .catch(error => return res.json({ error }));
-
-        bcrypt.genSalt(parseInt(process.env.NUM_HASH), function(err, salt) {
-          bcrypt.hash(req.body.password, salt, function(err, hash) {
-              if (err) {
-                    return res.status(500).json({
-                      error: err,
-                    });
-                  } else {
-                    const user = new User({
-                      _id: new mongoose.Types.ObjectId(),
-                      email: req.body.email,
-                      password: hash,
-                    });
-                    user.save().then((result) => {
-                      const token = jwt.sign({
-                            email: user.email,
-                            userId: user._id,
-                          },
-                          process.env.JWT_KEY,
-                          {
-                            expiresIn: "2d",
-                          }
-                        );
-                      res.status(201).json({
-                        message: "User created",
-                        userid: user._id,
-                        token: token,
-                      });
-                    });
-                 }
-          });
+      if (!recaptchaResponseJSON.success) {
+          return res.status(403).send({code: 403, message: "recaptcha invalid"})
+      }
+      const hashCount = parseInt(process.env.NUM_HASH)
+      const salt = await bcrypt.genSalt(hashCount)
+      const passwordHash = await bcrypt.hash(password, salt)
+      const newUser = new User({
+          _id: new mongoose.Types.ObjectId(),
+          email: req.body.email,
+          password: passwordHash,
       });
-    }
-  })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json({
-        error: err,
+      const jwtKey = process.env.JWT_KEY;
+      await newUser.save();
+      const jwtToken = jwt.sign({
+              email: newUser.email,
+              userId: newUser._id,
+          },
+          jwtKey,
+          {
+              expiresIn: "2d",
+          }
+      );
+      res.status(201).json({
+          message: "User created",
+          userid: newUser._id,
+          token: jwtToken,
       });
-    });
+
+  } catch (e) {
+      return res.status(500).send({code: 500, message: e.toString()})
+  }
 });
 
 
-router.post("/login", (req, res) => {
-  User.find({
-    email: req.body.email,
-  })
-    .exec()
-    .then((user) => {
-      if (user.length < 1) {
-        return res.status(401).json({
-          message: "Auth failed",
-        });
-      }
-      bcrypt.compare(req.body.password, user[0].password, (err, result) => {
-        if (err) {
-          return res.status(401).json({
-            message: "Auth failed",
-          });
+router.post("/login", async(req, res) => {
+    let { email, password,  token } = req.body;
+
+    try {
+        if (!validateEmail(email) || !validatePassword(password) || !token) {
+            res.status(400).send({code: 400, message: "invalid email address or password"});
+            return
         }
-        if (result) {
-          const token = jwt.sign(
-            {
-              email: user[0].email,
-              userId: user[0]._id,
+        let user = await User.findOne({ email })
+        const secret_key = process.env.SECRET_KEY;
+        const url = `https://www.google.com/recaptcha/api/siteverify?secret=${secret_key}&response=${token}`;
+        let recaptchaResponse = await fetch(url, {
+            method: 'post'
+        })
+
+        let recaptchaResponseJSON = await recaptchaResponse.json()
+        // if (!recaptchaResponseJSON.success) {
+        //     return res.status(403).send({code: 403, message: "recaptcha invalid"})
+        // }
+        let authStatus = await bcrypt.compare(password, user.password);
+        if(!authStatus) {
+            return res.status(403).send({code: 403, message: "auth failed"})
+        }
+        const jwtKey = process.env.JWT_KEY;
+        const jwtToken = jwt.sign({
+                email: user.email,
+                userId: user._id,
             },
-            process.env.JWT_KEY,
+            jwtKey,
             {
-              expiresIn: "1h",
+                expiresIn: "2d",
             }
-          );
-          return res.status(200).json({
+        );
+        res.status(200).json({
             message: "Auth successful",
-            token: token,
-            userid: user[0]._id,
-          });
-        }
-        return res.status(401).json({
-          message: "Auth failed",
+            userid: user._id,
+            token: jwtToken,
         });
-      });
-    })
-    .catch((err) => {
-      console.log(err);
-      return res.status(500).json({
-        error: err,
-      });
-    });
+
+    } catch (e) {
+        return res.status(500).send({code: 500, message: e.toString()})
+    }
 });
 
 module.exports = router;

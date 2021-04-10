@@ -13,6 +13,7 @@ RUN apt update && apt upgrade -y && apt install -y groff
 COPY . /app
 RUN chmod +x /app/safe.sh
 
+RUN mkdir $(uuidgen)
 
 EXPOSE 3000
 

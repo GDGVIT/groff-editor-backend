@@ -16,4 +16,4 @@ RUN chmod +x /app/safe.sh
 
 EXPOSE 3000
 
-CMD [ "./safe.sh", "&&" ,"npm", "start" ]
+CMD [ "./safe.sh"]

@@ -2,3 +2,6 @@
 node_modules
 order
 test.js
+.idea
+.vscode
+firebase.json

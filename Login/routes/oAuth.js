@@ -5,46 +5,24 @@ const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const {User} = require("../models/model.js");
 const jwt = require("jsonwebtoken");
+const querystring = require('querystring')
+const fetch = require('node-fetch')
+const admin = require('../../firebase/firebase')
+
 dotenv.config();
 
-async function getAccessTokenFromCode(code) {
-  const { data } = await axios({
-    url: `https://oauth2.googleapis.com/token`,
-    method: "post",
-    data: {
-      client_id: process.env.CLIENT_ID,
-      client_secret: process.env.CLIENT_SECRET,
-      redirect_uri: process.env.REDIRECT_URI,
-      grant_type: "authorization_code",
-      code,
-    },
-  });
-  console.log(data); // { access_token, expires_in, token_type, refresh_token }
-  return data.access_token;
-}
-
-async function getGoogleDriveFiles(access_token) {
-  const { data } = await axios({
-    url: "https://www.googleapis.com/oauth2/v2/userinfo",
-    method: "get",
-    headers: {
-      Authorization: `Bearer ${access_token}`,
-    },
-  });
-  console.log(data); // { id, email, given_name, family_name }
-  return data;
-}
-
-router.get("/google", async (req, res) => {
+router.post("/google", async (req, res) => {
   try {
-    let token = await getAccessTokenFromCode(req.query.code);
-    console.log(token);
-    let data = await getGoogleDriveFiles(token);
-    let mail = data.email;
-    let token1;
+    let usr;
+    try {
+      usr = await admin.auth().verifyIdToken(req.body.idToken)
+    } catch (e) {
+      return res.status(403).send({code: 403, message: "invalid idtoken"})
+    }
+    let mail = usr.email;
     let user = await User.find({
       email: mail,
-    }).exec();
+    });
 
     if (user.length >= 1) {
       token1 = jwt.sign(
@@ -89,7 +67,7 @@ router.get("/google", async (req, res) => {
       });
     }
   } catch (err) {
-    console.log(err);
+    res.status(500).send({code: 500, message: "internal error occurred"})
   }
 });
 

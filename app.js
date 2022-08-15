@@ -82,29 +82,24 @@ io.origins("*:*");
 io.on("connection", (person) => {
 	console.log(`made socket connection : ${person.id}`);
 
-	person.on("cmd", async function (val){
+	person.on("cmd", async (val) => {
 
 		let val_json = JSON.parse(val);
 		let token = val_json.token;
 		let fileName = val_json.fileId;
 		let data = val_json.data;
-		// await trigger(val_json,'socket')
 		console.log(val_json);
 		let email = '';
 		try {
-	
-			jwt.verify(token, process.env.JWT_KEY, (err, user) => {
-	  		if (err) {
-	        		console.log(err)
-	    		}
-	      	  	console.log(user);
-	 	    	email = user.email;
-	    		console.log(email);
-		   });
+
+			let user = await jwt.verify(token, process.env.JWT_KEY);
+			console.log(user);
+			email = user.email;
+			console.log(email);
 		} catch (err) {
 			console.log(err);
+			return
 		}
-
 			User.find({
 				email: email
 			}).then((doc) => {
@@ -138,12 +133,12 @@ io.on("connection", (person) => {
 
 					child = execFile(
 			            "pdfroff",
-			            ["-i", "-ms", `--pdf-output=media/${doc._id}.pdf`],
+			            ["-i", "-ms", `--pdf-output=media/${doc[0]._id}.pdf`],
 			            (err) => {
 			                if (err) {
 			                    console.log(err);
 			                } else {
-			                    fs.readFile(`media/${doc._id}.pdf`, "binary", (err, data) => {
+			                    fs.readFile(`media/${doc[0]._id}.pdf`, "binary", (err, data) => {
 			                        if (err) {
 			                            return console.log("Error:" + err);
 			                        }
@@ -161,10 +156,10 @@ io.on("connection", (person) => {
 
 				} else {
 					console.log("");
-				}		
+				}
 			}).catch(err => {
 			console.log(err)
-			});	
+			});
 		})
 
 	});
